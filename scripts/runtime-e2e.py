@@ -109,7 +109,7 @@ async def main():
         await snap(page, "05-access-request-desktop.png", "Employee access request")
 
         await page.goto(BASE_URL + "/security", wait_until="domcontentloaded")
-        await expect(page.get_by_role("heading", name="Security")).to_be_visible(timeout=15000)
+        await expect(page.get_by_role("heading", name="My Security", exact=True)).to_be_visible(timeout=15000)
         await snap(page, "06-security-desktop.png", "Employee security")
 
         # Normal POST/antiforgery logout.
