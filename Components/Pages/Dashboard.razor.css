@@ -1,0 +1,2073 @@
+/* =========================================================
+   EMPLOYEE DASHBOARD PAGE
+   Adds only the introductory page styling at this stage.
+   Detailed dashboard cards will be created separately.
+   ========================================================= */
+.dashboard-page {
+    width: 100%;
+    max-width: 1400px;
+    margin: 0 auto;
+}
+
+/* =========================================================
+   DASHBOARD OVERVIEW ROW
+   Places the employee greeting on the left and the weather
+   and date summary on the right.
+   ========================================================= */
+.dashboard-overview-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 30px;
+    width: 100%;
+    margin-bottom: 24px;
+}
+
+/* Group the personalised greeting and supporting sentence. */
+.dashboard-introduction {
+    min-width: 0;
+}
+
+/* Match the strong but friendly reference heading. */
+.dashboard-introduction h1 {
+    margin: 0;
+    color: #101a39;
+    font-size: 27px;
+    line-height: 1.2;
+    font-weight: 700;
+    letter-spacing: -0.5px;
+}
+
+/* Style the short workday summary beneath the greeting. */
+.dashboard-introduction p {
+    margin: 7px 0 0;
+    color: #687289;
+    font-size: 14px;
+}
+
+
+/* =========================================================
+   WEATHER AND DATE SUMMARY
+   Recreates the compact weather-and-date block shown beside
+   the dashboard greeting in the reference.
+   ========================================================= */
+.dashboard-day-summary {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    flex: 0 0 auto;
+}
+
+/* Align the weather icon beside its temperature information. */
+.dashboard-weather {
+    display: flex;
+    align-items: center;
+    gap: 11px;
+}
+
+/* =========================================================
+   POLISHED WEATHER ICON
+   Preserves the existing footprint while adding richer
+   colour, layering, and visual depth.
+   ========================================================= */
+.dashboard-weather-icon {
+    display: grid;
+    place-items: center;
+    flex: 0 0 45px;
+    width: 45px;
+    height: 45px;
+}
+
+/* Keep the upgraded illustration inside the original space. */
+.dashboard-weather-icon svg {
+    display: block;
+    width: 48px;
+    height: 45px;
+    overflow: visible;
+}
+
+
+/* =========================================================
+   WEATHER SUN
+   Creates the warm partly-cloudy glow behind the cloud.
+   ========================================================= */
+.dashboard-weather-sun {
+    fill: url(#dashboardSunGradient);
+    stroke: #F2A000;
+    stroke-width: 1;
+    filter: drop-shadow(0 3px 4px rgba(245, 166, 0, 0.22));
+}
+
+/* Style the sunlight rays separately from the cloud. */
+.dashboard-weather-rays {
+    fill: none;
+    stroke: #F4A400;
+    stroke-width: 2.2;
+    stroke-linecap: round;
+}
+
+
+/* =========================================================
+   WEATHER CLOUD
+   Uses a soft shadow and bright gradient for a fuller,
+   slightly three-dimensional appearance.
+   ========================================================= */
+.dashboard-weather-cloud-shadow {
+    fill: rgba(112, 159, 202, 0.2);
+    transform: translateY(2px);
+}
+
+/* Create the main polished cloud surface. */
+.dashboard-weather-cloud {
+    fill: url(#dashboardCloudGradient);
+    stroke: #B7D1E8;
+    stroke-width: 1.1;
+    stroke-linejoin: round;
+    filter: drop-shadow(0 4px 4px rgba(74, 114, 151, 0.15));
+}
+
+/* Stack the temperature above the condition wording. */
+.dashboard-weather-copy {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+}
+
+/* Emphasise the current temperature. */
+.dashboard-weather-copy strong {
+    color: #111a35;
+    font-size: 15px;
+    font-weight: 700;
+}
+
+/* Style the weather description. */
+.dashboard-weather-copy span {
+    color: #687289;
+    font-size: 12px;
+}
+
+/* Separate weather and date without introducing a card. */
+.dashboard-summary-divider {
+    width: 1px;
+    height: 42px;
+    background: #dce2eb;
+}
+
+/* Stack the weekday above the full date. */
+.dashboard-date {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    min-width: 104px;
+}
+
+/* Style the weekday. */
+.dashboard-date strong {
+    color: #111a35;
+    font-size: 14px;
+    font-weight: 700;
+}
+
+/* Style the full calendar date. */
+.dashboard-date time {
+    color: #687289;
+    font-size: 12px;
+}
+
+
+/* =========================================================
+   RESPONSIVE DASHBOARD OVERVIEW
+   Allows the weather and date to move beneath the greeting
+   when the available width becomes limited.
+   ========================================================= */
+@media (max-width: 760px) {
+    .dashboard-overview-row {
+        align-items: flex-start;
+        flex-direction: column;
+        gap: 18px;
+    }
+}
+
+/* =========================================================
+   DASHBOARD CONTENT GRID
+   Creates the primary workspace and narrower information
+   column shown in the employee-dashboard reference.
+   ========================================================= */
+.dashboard-content-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 2.35fr) minmax(250px, 0.9fr);
+    align-items: start;
+    gap: 18px;
+    width: 100%;
+}
+
+/* Stack the three primary dashboard rows vertically. */
+.dashboard-primary-column {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+    min-width: 0;
+}
+
+/* =========================================================
+   PRIMARY DASHBOARD ROWS
+   Establishes the card proportions before detailed card
+   content and styling are introduced.
+   ========================================================= */
+
+/* Create the wider attendance card and narrower weekly card. */
+.dashboard-top-card-row {
+    display: grid;
+    grid-template-columns: minmax(0, 1.18fr) minmax(0, 1fr);
+    gap: 18px;
+}
+
+/* Create balanced task and quick-link cards. */
+.dashboard-middle-card-row {
+    display: grid;
+    grid-template-columns: minmax(0, 0.88fr) minmax(0, 1.12fr);
+    gap: 18px;
+}
+
+/* Create balanced article and FAQ cards. */
+.dashboard-bottom-card-row {
+    display: grid;
+    grid-template-columns: minmax(0, 0.95fr) minmax(0, 1.05fr);
+    gap: 18px;
+}
+
+/* Stack the dashboard’s right-hand information cards. */
+.dashboard-information-column {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+    min-width: 0;
+}
+
+
+/* =========================================================
+   TEMPORARY DASHBOARD CARD PLACEHOLDERS
+   Confirms the layout geometry before each real card is built.
+   These placeholders will be replaced one card at a time.
+   ========================================================= */
+.dashboard-card-placeholder {
+    display: flex;
+    align-items: flex-start;
+    min-width: 0;
+    min-height: 220px;
+    padding: 20px;
+    border: 1px dashed #cbd5e3;
+    border-radius: 11px;
+    color: #8490a5;
+    font-size: 13px;
+    background: #ffffff;
+    box-sizing: border-box;
+}
+
+/* Give the middle and bottom primary rows a shorter height. */
+.dashboard-middle-card-row .dashboard-card-placeholder,
+.dashboard-bottom-card-row .dashboard-card-placeholder {
+    min-height: 205px;
+}
+
+/* Give the information-column cards reference-like proportions. */
+.dashboard-side-card {
+    min-height: 270px;
+}
+
+/* Keep the future employee-help card more compact. */
+.dashboard-help-placeholder {
+    min-height: 185px;
+    background: #eef6ff;
+}
+
+
+/* =========================================================
+   RESPONSIVE DASHBOARD GRID
+   Stacks dashboard areas cleanly as the viewport narrows.
+   ========================================================= */
+@media (max-width: 1120px) {
+    .dashboard-content-grid {
+        grid-template-columns: 1fr;
+    }
+
+    /* Move the information cards beneath the primary workspace. */
+    .dashboard-information-column {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 760px) {
+    /* Stack every primary dashboard row on narrow screens. */
+    .dashboard-top-card-row,
+    .dashboard-middle-card-row,
+    .dashboard-bottom-card-row {
+        grid-template-columns: 1fr;
+    }
+
+    /* Stack the information cards as well. */
+    .dashboard-information-column {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* =========================================================
+   TIME AND ATTENDANCE CARD
+   Recreates the main blue clocking card from the employee
+   dashboard reference.
+   ========================================================= */
+.attendance-card {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    min-height: 292px;
+    padding: 19px 20px 20px;
+    overflow: hidden;
+    border-radius: 11px;
+    color: #ffffff;
+    background:
+        radial-gradient(
+            circle at 78% 20%,
+            rgba(126, 235, 239, 0.34),
+            transparent 36%
+        ),
+        linear-gradient(
+            135deg,
+            #3566ed 0%,
+            #437fe8 48%,
+            #56cbd7 100%
+        );
+    box-shadow:
+        0 12px 28px rgba(44, 101, 214, 0.18),
+        inset 0 1px 0 rgba(255, 255, 255, 0.12);
+    box-sizing: border-box;
+}
+
+
+/* =========================================================
+   ATTENDANCE CARD HEADER
+   Aligns the card title with the full-timesheet link.
+   ========================================================= */
+.attendance-card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 18px;
+}
+
+/* Style the card title. */
+.attendance-card-header h2 {
+    margin: 0;
+    color: #ffffff;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+/* Style the full-timesheet action. */
+.attendance-card-header a {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    color: rgba(255, 255, 255, 0.9);
+    font-size: 11px;
+    font-weight: 600;
+    text-decoration: none;
+}
+
+/* Brighten the timesheet link during hover. */
+.attendance-card-header a:hover {
+    color: #ffffff;
+}
+
+
+/* =========================================================
+   ATTENDANCE STATUS AND HOURS
+   Places the current clocking details beside the progress
+   ring while preserving the reference proportions.
+   ========================================================= */
+.attendance-card-content {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 148px;
+    align-items: center;
+    gap: 18px;
+    flex: 1;
+    margin: 10px 0 8px;
+}
+
+/* Keep the current clocking information grouped together. */
+.attendance-status {
+    min-width: 0;
+}
+
+/* Place AM beside the large current time. */
+.attendance-current-time {
+    display: flex;
+    align-items: baseline;
+    gap: 7px;
+}
+
+/* Emphasise the employee’s current clock time. */
+.attendance-current-time strong {
+    font-size: 38px;
+    line-height: 1;
+    font-weight: 500;
+    letter-spacing: -1.4px;
+}
+
+/* Style the AM indicator. */
+.attendance-current-time span {
+    font-size: 18px;
+    font-weight: 500;
+}
+
+/* Style the current clocked-in message. */
+.attendance-status p {
+    margin: 13px 0 10px;
+    color: rgba(255, 255, 255, 0.92);
+    font-size: 12px;
+}
+
+/* Align the green status dot with the start time. */
+.attendance-since {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: rgba(255, 255, 255, 0.92);
+    font-size: 11px;
+}
+
+/* Create the bright green online-status dot. */
+.attendance-status-dot {
+    flex: 0 0 8px;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #42e268;
+    box-shadow: 0 0 9px rgba(66, 226, 104, 0.55);
+}
+
+
+/* =========================================================
+   CLEAN TODAY’S-HOURS PROGRESS RING
+   Masks the conic gradient into a true circular ring so no
+   coloured segment can bleed into the centre.
+   ========================================================= */
+.attendance-hours-progress {
+    position: relative;
+    display: grid;
+    place-items: center;
+    width: 142px;
+    height: 142px;
+    border-radius: 50%;
+
+    /* Give the centre one consistent translucent blue tone. */
+    background: rgba(77, 151, 222, 0.72);
+    box-shadow: inset 0 0 18px rgba(255, 255, 255, 0.08);
+}
+
+/* Draw only the outer progress ring, leaving the centre clear. */
+.attendance-hours-progress::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    background:
+        conic-gradient(
+            from -90deg,
+            #ffffff 0%,
+            #ffffff 76%,
+            rgba(255, 255, 255, 0.28) 76%,
+            rgba(255, 255, 255, 0.28) 100%
+        );
+
+    /* Cut the centre out of the gradient to create a ring. */
+    -webkit-mask:
+        radial-gradient(
+            farthest-side,
+            transparent calc(100% - 11px),
+            #000000 0
+        );
+
+    mask:
+        radial-gradient(
+            farthest-side,
+            transparent calc(100% - 11px),
+            #000000 0
+        );
+}
+
+/* Keep the worked-hours text above the inner circle. */
+.attendance-hours-copy {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    align-items: center;
+    flex-direction: column;
+    gap: 4px;
+    text-align: center;
+}
+
+/* Style the small progress-ring heading. */
+.attendance-hours-copy span {
+    color: rgba(255, 255, 255, 0.88);
+    font-size: 10px;
+}
+
+/* Emphasise the worked duration. */
+.attendance-hours-copy strong {
+    font-size: 24px;
+    line-height: 1;
+    font-weight: 500;
+}
+
+/* Style the full working-day duration. */
+.attendance-hours-copy small {
+    color: rgba(255, 255, 255, 0.9);
+    font-size: 11px;
+}
+
+
+/* =========================================================
+   ATTENDANCE ACTIONS
+   Creates the white Clock Out action and outlined Start Break
+   action shown at the bottom of the reference card.
+   ========================================================= */
+.attendance-actions {
+    display: grid;
+    grid-template-columns: minmax(0, 1.08fr) minmax(0, 1fr);
+    gap: 18px;
+}
+
+/* Shared attendance-button structure. */
+.attendance-actions button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 9px;
+    height: 42px;
+    padding: 0 14px;
+    border-radius: 6px;
+    font-family: inherit;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+/* Create the prominent white Clock Out action. */
+.attendance-clock-out {
+    border: 1px solid #ffffff;
+    color: #183e8f;
+    background: #ffffff;
+    box-shadow: 0 7px 16px rgba(22, 68, 154, 0.12);
+}
+
+/* Create the transparent secondary break action. */
+.attendance-start-break {
+    border: 1px solid rgba(255, 255, 255, 0.76);
+    color: #ffffff;
+    background: rgba(255, 255, 255, 0.05);
+}
+
+/* Add restrained hover feedback to both actions. */
+.attendance-actions button:hover {
+    filter: brightness(1.04);
+}
+
+/* Size the icons used by both attendance actions. */
+.attendance-action-icon {
+    display: grid;
+    place-items: center;
+    width: 18px;
+    height: 18px;
+}
+
+/* Keep the action icons clean and outlined. */
+.attendance-action-icon svg {
+    width: 18px;
+    height: 18px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.7;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+
+/* =========================================================
+   RESPONSIVE ATTENDANCE CARD
+   Allows the progress ring and clocking information to stack
+   when the card becomes too narrow.
+   ========================================================= */
+@media (max-width: 680px) {
+    .attendance-card-content {
+        grid-template-columns: 1fr;
+    }
+
+    /* Centre the progress ring beneath the status details. */
+    .attendance-hours-progress {
+        justify-self: center;
+    }
+
+    /* Stack the two clocking actions on very small screens. */
+    .attendance-actions {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* =========================================================
+   WEEKLY ATTENDANCE CARD
+   Recreates the white attendance-summary card positioned
+   beside the main blue clocking card.
+   ========================================================= */
+.weekly-attendance-card {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    min-height: 292px;
+    padding: 19px 20px 18px;
+    border: 1px solid #e0e6ef;
+    border-radius: 11px;
+    background: #ffffff;
+    box-shadow: 0 8px 24px rgba(32, 51, 87, 0.06);
+    box-sizing: border-box;
+}
+
+
+/* =========================================================
+   WEEKLY ATTENDANCE HEADER
+   Aligns the heading and detailed-attendance link.
+   ========================================================= */
+.weekly-attendance-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+}
+
+/* Style the weekly-attendance heading. */
+.weekly-attendance-header h2 {
+    margin: 0;
+    color: #15203b;
+    font-size: 14px;
+    font-weight: 700;
+}
+
+/* Style the compact View all action. */
+.weekly-attendance-header a {
+    color: #286ce5;
+    font-size: 11px;
+    font-weight: 600;
+    text-decoration: none;
+}
+
+/* Add restrained hover feedback. */
+.weekly-attendance-header a:hover {
+    text-decoration: underline;
+}
+
+
+/* =========================================================
+   WEEKLY ATTENDANCE SUMMARY
+   Groups the attended-day count and positive status label.
+   ========================================================= */
+.weekly-attendance-summary {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 18px;
+    margin-top: 25px;
+}
+
+/* Stack the count above its supporting label. */
+.weekly-attendance-count {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+/* =========================================================
+   WEEKLY ATTENDANCE VALUE
+   Keeps the value on one baseline while allowing the current
+   attendance count and weekly total to use different colours.
+   ========================================================= */
+.weekly-attendance-value {
+    display: inline-flex;
+    align-items: baseline;
+    line-height: 1;
+    font-size: 34px;
+    font-weight: 700;
+    letter-spacing: -1px;
+}
+
+/* Keep the completed attendance count in portal blue. */
+.weekly-attendance-completed {
+    color: #234893;
+}
+
+/* Display the slash and weekly total in muted grey. */
+.weekly-attendance-total {
+    color: #a1a8b5;
+}
+
+/* =========================================================
+   DAYS-PRESENT LABEL ONLY
+   The direct-child selector prevents this rule from shrinking
+   or recolouring the nested 4 and /5 value spans.
+   ========================================================= */
+.weekly-attendance-count > span {
+    color: #6e7789;
+    font-size: 13px;
+}
+
+/* Create the soft-green On Track badge. */
+.weekly-attendance-status {
+    margin-top: 5px;
+    padding: 5px 9px;
+    border-radius: 5px;
+    color: #239449;
+    font-size: 10px;
+    font-weight: 700;
+    background: #eaf8ee;
+}
+
+
+/* =========================================================
+   FIVE-DAY ATTENDANCE CHART
+   Displays daily completion markers and vertical bars.
+   ========================================================= */
+.weekly-attendance-chart {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    align-items: end;
+    gap: 12px;
+    flex: 1;
+    min-height: 120px;
+    margin-top: 13px;
+    padding-top: 5px;
+    border-bottom: 1px solid #e8edf3;
+}
+
+/* Stack each marker, bar, and weekday label. */
+.weekly-attendance-day {
+    display: grid;
+    grid-template-rows: 19px 1fr 22px;
+    justify-items: center;
+    align-items: end;
+    height: 100%;
+    min-width: 0;
+}
+
+/* Shared daily attendance-marker structure. */
+.weekly-day-marker {
+    position: relative;
+    display: grid;
+    place-items: center;
+    width: 15px;
+    height: 15px;
+    align-self: start;
+    border-radius: 50%;
+    box-sizing: border-box;
+}
+
+/* Create the completed green attendance markers. */
+.weekly-day-marker.is-complete {
+    color: transparent;
+    font-size: 0;
+    background: #26ad4a;
+}
+
+/* Draw a crisp white tick inside completed markers. */
+.weekly-day-marker.is-complete::before {
+    content: "";
+    position: absolute;
+    top: 3px;
+    left: 5px;
+    width: 4px;
+    height: 7px;
+    border-right: 1.6px solid #ffffff;
+    border-bottom: 1.6px solid #ffffff;
+    transform: rotate(45deg);
+    box-sizing: border-box;
+}
+
+/* Create the empty marker for Friday. */
+.weekly-day-marker.is-pending {
+    border: 1.5px solid #9ba7bb;
+    background: #ffffff;
+}
+
+
+/* =========================================================
+   DAILY ATTENDANCE BARS
+   Uses soft-green completed bars, blue for the current day,
+   and an outlined pending bar for Friday.
+   ========================================================= */
+.weekly-day-bar {
+    display: block;
+    align-self: end;
+    width: 17px;
+    border-radius: 5px 5px 0 0;
+    box-sizing: border-box;
+}
+
+/* Completed attendance bars. */
+.weekly-day-bar.is-present {
+    background:
+        linear-gradient(
+            180deg,
+            #bdebd0 0%,
+            #dcf5e6 100%
+        );
+}
+
+/* Highlight the current day in portal blue. */
+.weekly-day-bar.is-current {
+    background:
+        linear-gradient(
+            180deg,
+            #3478e8 0%,
+            #5b98f1 100%
+        );
+    box-shadow: 0 5px 11px rgba(52, 120, 232, 0.18);
+}
+
+/* Create the outlined incomplete Friday bar. */
+.weekly-day-bar.is-pending {
+    border: 1.5px solid #9ea9bc;
+    background: #ffffff;
+}
+
+/* Give each day a slightly different visual height. */
+.bar-monday {
+    height: 52px;
+}
+
+.bar-tuesday {
+    height: 61px;
+}
+
+.bar-wednesday {
+    height: 57px;
+}
+
+.bar-thursday {
+    height: 64px;
+}
+
+.bar-friday {
+    height: 61px;
+}
+
+/* Style the weekday labels beneath the bars. */
+.weekly-day-label {
+    align-self: center;
+    color: #637087;
+    font-size: 10px;
+    font-weight: 500;
+}
+
+/* =========================================================
+   MY TASKS CARD
+   Recreates the employee-task card from the dashboard
+   reference, including deadlines and priority indicators.
+   ========================================================= */
+.tasks-card {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    min-height: 285px;
+    padding: 18px 18px 15px;
+    border: 1px solid #e0e6ef;
+    border-radius: 11px;
+    background: #ffffff;
+    box-shadow: 0 8px 24px rgba(32, 51, 87, 0.05);
+    box-sizing: border-box;
+}
+
+
+/* =========================================================
+   TASKS CARD HEADER
+   Aligns the section title with the View all action.
+   ========================================================= */
+.tasks-card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+}
+
+/* Style the card heading. */
+.tasks-card-header h2 {
+    margin: 0;
+    color: #15203b;
+    font-size: 14px;
+    font-weight: 700;
+}
+
+/* Style the View all action. */
+.tasks-card-header a {
+    color: #286ce5;
+    font-size: 11px;
+    font-weight: 600;
+    text-decoration: none;
+}
+
+/* Add subtle hover feedback. */
+.tasks-card-header a:hover {
+    text-decoration: underline;
+}
+
+
+/* =========================================================
+   EMPLOYEE TASK LIST
+   Stacks four compact task rows with thin separators.
+   ========================================================= */
+.tasks-list {
+    display: flex;
+    flex-direction: column;
+    margin-top: 12px;
+}
+
+/* Create the individual task row. */
+.task-item {
+    display: grid;
+    grid-template-columns: 34px minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 10px;
+    min-width: 0;
+    padding: 9px 0;
+}
+
+/* Separate adjacent task rows. */
+.task-item + .task-item {
+    border-top: 1px solid #edf0f4;
+}
+
+
+/* =========================================================
+   TASK ICONS
+   Uses soft category colours matching the reference.
+   ========================================================= */
+.task-icon {
+    display: grid;
+    place-items: center;
+    width: 30px;
+    height: 30px;
+    border-radius: 7px;
+}
+
+/* Size all task-row icons consistently. */
+.task-icon svg {
+    width: 17px;
+    height: 17px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.7;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+/* High-priority task icon. */
+.task-icon-high {
+    color: #f34b58;
+    background: #fff0f2;
+}
+
+/* Medium-priority task icon. */
+.task-icon-medium {
+    color: #24a45a;
+    background: #ecf9f1;
+}
+
+/* Standard employee-task icon. */
+.task-icon-low {
+    color: #3479e7;
+    background: #edf4ff;
+}
+
+
+/* =========================================================
+   TASK WORDING
+   Keeps task titles and supporting details clearly grouped.
+   ========================================================= */
+.task-copy {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    min-width: 0;
+}
+
+/* Style the employee-task title. */
+.task-copy strong {
+    overflow: hidden;
+    color: #28334b;
+    font-size: 11px;
+    font-weight: 600;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* Style the task deadline or supporting detail. */
+.task-copy span {
+    overflow: hidden;
+    color: #7b8496;
+    font-size: 9px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+
+/* =========================================================
+   TASK PRIORITY LABELS
+   Creates the High, Medium, and Low status chips.
+   ========================================================= */
+.task-priority {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 39px;
+    height: 22px;
+    padding: 0 7px;
+    border-radius: 5px;
+    font-size: 9px;
+    font-weight: 600;
+    box-sizing: border-box;
+}
+
+/* High-priority status. */
+.task-priority-high {
+    color: #e53d49;
+    background: #ffecee;
+}
+
+/* Medium-priority status. */
+.task-priority-medium {
+    color: #d67d16;
+    background: #fff3df;
+}
+
+/* Low-priority status. */
+.task-priority-low {
+    color: #3977d6;
+    background: #edf4ff;
+}
+
+
+/* =========================================================
+   TASKS CARD FOOTER
+   Provides the link to the complete employee-task page.
+   ========================================================= */
+.tasks-card-footer-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 9px;
+    width: fit-content;
+    margin-top: auto;
+    padding-top: 10px;
+    color: #286ce5;
+    font-size: 10px;
+    font-weight: 600;
+    text-decoration: none;
+}
+
+/* Add subtle movement to the footer arrow. */
+.tasks-card-footer-link:hover {
+    text-decoration: underline;
+}
+
+/* =========================================================
+   QUICK LINKS CARD
+   Recreates the employee self-service shortcut card shown
+   beside My Tasks in the dashboard reference.
+   ========================================================= */
+.quick-links-card {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    min-height: 285px;
+    padding: 18px 18px 15px;
+    border: 1px solid #e0e6ef;
+    border-radius: 11px;
+    background: #ffffff;
+    box-shadow: 0 8px 24px rgba(32, 51, 87, 0.05);
+    box-sizing: border-box;
+}
+
+/* Style the Quick Links heading. */
+.quick-links-header h2 {
+    margin: 0;
+    color: #15203b;
+    font-size: 14px;
+    font-weight: 700;
+}
+
+
+/* =========================================================
+   QUICK-LINK GRID
+   Arranges eight employee shortcuts into two compact rows.
+   ========================================================= */
+.quick-links-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 12px;
+    margin-top: 15px;
+}
+
+/* Create the individual employee-service shortcut. */
+.quick-link-item {
+    display: flex;
+    align-items: center;
+    flex-direction: column;
+    justify-content: center;
+    gap: 8px;
+    min-width: 0;
+    min-height: 76px;
+    padding: 9px 5px;
+    border: 1px solid #e2e7ef;
+    border-radius: 8px;
+    color: #263149;
+    text-align: center;
+    text-decoration: none;
+    background: #ffffff;
+    box-sizing: border-box;
+    transition:
+        border-color 0.18s ease,
+        box-shadow 0.18s ease,
+        transform 0.18s ease;
+}
+
+/* Add restrained hover feedback to each shortcut. */
+.quick-link-item:hover {
+    border-color: #bad1f8;
+    box-shadow: 0 6px 14px rgba(42, 100, 195, 0.09);
+    transform: translateY(-1px);
+}
+
+/* Create the blue icon treatment used by each shortcut. */
+.quick-link-icon {
+    display: grid;
+    place-items: center;
+    width: 29px;
+    height: 29px;
+    border-radius: 6px;
+    color: #3379e6;
+    background: #edf4ff;
+}
+
+/* Keep all shortcut icons clean and consistent. */
+.quick-link-icon svg {
+    width: 19px;
+    height: 19px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.7;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+/* Style the shortcut wording. */
+.quick-link-item > span:last-child {
+    min-height: 22px;
+    color: #33405a;
+    font-size: 9px;
+    font-weight: 500;
+    line-height: 1.25;
+}
+
+
+/* =========================================================
+   QUICK-LINKS FOOTER
+   Provides access to the full employee-services area.
+   ========================================================= */
+.quick-links-footer {
+    display: inline-flex;
+    align-items: center;
+    gap: 9px;
+    width: fit-content;
+    margin-top: auto;
+    padding-top: 12px;
+    color: #286ce5;
+    font-size: 10px;
+    font-weight: 600;
+    text-decoration: none;
+}
+
+/* Add subtle hover feedback to the footer link. */
+.quick-links-footer:hover {
+    text-decoration: underline;
+}
+
+
+/* =========================================================
+   RESPONSIVE QUICK-LINK GRID
+   Reduces the number of columns as available space narrows.
+   ========================================================= */
+@media (max-width: 780px) {
+    .quick-links-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+/* =========================================================
+   HELPFUL ARTICLES CARD
+   Recreates the compact employee-guidance card shown in the
+   lower-left section of the dashboard reference.
+   ========================================================= */
+.helpful-articles-card {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    min-height: 250px;
+    padding: 18px 18px 15px;
+    border: 1px solid #e0e6ef;
+    border-radius: 11px;
+    background: #ffffff;
+    box-shadow: 0 8px 24px rgba(32, 51, 87, 0.05);
+    box-sizing: border-box;
+}
+
+
+/* =========================================================
+   HELPFUL ARTICLES HEADER
+   Aligns the card heading with the View all action.
+   ========================================================= */
+.helpful-articles-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+}
+
+/* Style the card heading. */
+.helpful-articles-header h2 {
+    margin: 0;
+    color: #15203b;
+    font-size: 14px;
+    font-weight: 700;
+}
+
+/* Style the View all action. */
+.helpful-articles-header a {
+    color: #286ce5;
+    font-size: 11px;
+    font-weight: 600;
+    text-decoration: none;
+}
+
+/* Add restrained hover feedback. */
+.helpful-articles-header a:hover {
+    text-decoration: underline;
+}
+
+
+/* =========================================================
+   HELPFUL ARTICLE LIST
+   Stacks the employee resources into three compact rows.
+   ========================================================= */
+.helpful-articles-list {
+    display: flex;
+    flex-direction: column;
+    margin-top: 12px;
+}
+
+/* Create each article row. */
+.helpful-article-item {
+    display: grid;
+    grid-template-columns: 32px minmax(0, 1fr);
+    align-items: center;
+    gap: 10px;
+    min-width: 0;
+    padding: 8px 0;
+    color: inherit;
+    text-decoration: none;
+}
+
+/* Separate neighbouring article rows. */
+.helpful-article-item + .helpful-article-item {
+    border-top: 1px solid #edf0f4;
+}
+
+/* Add subtle hover feedback without moving the layout. */
+.helpful-article-item:hover .helpful-article-copy strong {
+    color: #286ce5;
+}
+
+
+/* =========================================================
+   ARTICLE ICON
+   Uses the circular blue document treatment from the
+   dashboard reference.
+   ========================================================= */
+.helpful-article-icon {
+    display: grid;
+    place-items: center;
+    width: 29px;
+    height: 29px;
+    border-radius: 50%;
+    color: #ffffff;
+    background: #3c82e9;
+    box-shadow: 0 4px 10px rgba(60, 130, 233, 0.16);
+}
+
+/* Size the document icon consistently. */
+.helpful-article-icon svg {
+    width: 15px;
+    height: 15px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.7;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+
+/* =========================================================
+   ARTICLE WORDING
+   Keeps the title and description clearly grouped.
+   ========================================================= */
+.helpful-article-copy {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    min-width: 0;
+}
+
+/* Style the article title. */
+.helpful-article-copy strong {
+    color: #2c374f;
+    font-size: 10px;
+    font-weight: 600;
+    transition: color 0.18s ease;
+}
+
+/* Style the article description. */
+.helpful-article-copy > span {
+    color: #7b8496;
+    font-size: 8.5px;
+    line-height: 1.35;
+}
+
+
+/* =========================================================
+   HELPFUL ARTICLES FOOTER
+   Provides access to the full employee help centre.
+   ========================================================= */
+.helpful-articles-footer {
+    display: inline-flex;
+    align-items: center;
+    gap: 9px;
+    width: fit-content;
+    margin-top: auto;
+    padding-top: 10px;
+    color: #286ce5;
+    font-size: 10px;
+    font-weight: 600;
+    text-decoration: none;
+}
+
+/* Add subtle hover feedback to the footer link. */
+.helpful-articles-footer:hover {
+    text-decoration: underline;
+}
+
+/* =========================================================
+   FREQUENTLY ASKED QUESTIONS CARD
+   Recreates the compact accordion-style help card shown
+   beside Helpful Articles in the dashboard reference.
+   ========================================================= */
+.faq-card {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    min-height: 250px;
+    padding: 18px 18px 15px;
+    border: 1px solid #e0e6ef;
+    border-radius: 11px;
+    background: #ffffff;
+    box-shadow: 0 8px 24px rgba(32, 51, 87, 0.05);
+    box-sizing: border-box;
+}
+
+
+/* =========================================================
+   FAQ CARD HEADER
+   Aligns the section title with the View all action.
+   ========================================================= */
+.faq-card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+}
+
+/* Style the FAQ heading. */
+.faq-card-header h2 {
+    margin: 0;
+    color: #15203b;
+    font-size: 14px;
+    font-weight: 700;
+}
+
+/* Style the View all action. */
+.faq-card-header a {
+    color: #286ce5;
+    font-size: 11px;
+    font-weight: 600;
+    text-decoration: none;
+}
+
+/* Add restrained hover feedback. */
+.faq-card-header a:hover {
+    text-decoration: underline;
+}
+
+
+/* =========================================================
+   FAQ QUESTION LIST
+   Stacks four compact question rows beneath the heading.
+   ========================================================= */
+.faq-list {
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+    margin-top: 14px;
+}
+
+/* Create each accordion-style question row. */
+.faq-item {
+    display: grid;
+    grid-template-columns: 25px minmax(0, 1fr) 20px;
+    align-items: center;
+    gap: 9px;
+    width: 100%;
+    min-height: 39px;
+    padding: 5px 9px;
+    border: 1px solid #e1e6ee;
+    border-radius: 7px;
+    color: #2d3951;
+    font-family: inherit;
+    text-align: left;
+    cursor: pointer;
+    background: #ffffff;
+    box-sizing: border-box;
+    transition:
+        border-color 0.18s ease,
+        background 0.18s ease,
+        box-shadow 0.18s ease;
+}
+
+/* Add subtle feedback without shifting the question row. */
+.faq-item:hover {
+    border-color: #bfd2f3;
+    background: #f9fbff;
+    box-shadow: 0 4px 10px rgba(44, 92, 168, 0.06);
+}
+
+
+/* =========================================================
+   FAQ QUESTION ICON
+   Creates the soft-blue circular question mark shown in the
+   reference card.
+   ========================================================= */
+.faq-question-icon {
+    display: grid;
+    place-items: center;
+    width: 23px;
+    height: 23px;
+    border-radius: 50%;
+    color: #3479e7;
+    font-size: 12px;
+    font-weight: 700;
+    background: #edf4ff;
+}
+
+/* Keep the question text on one clean line where possible. */
+.faq-question-text {
+    min-width: 0;
+    overflow: hidden;
+    color: #354159;
+    font-size: 10px;
+    font-weight: 500;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+
+/* =========================================================
+   FAQ DROPDOWN CHEVRON
+   Matches the small downward indicator at the right edge.
+   ========================================================= */
+.faq-chevron {
+    display: grid;
+    place-items: center;
+    width: 18px;
+    height: 18px;
+    color: #182641;
+}
+
+/* Style the question-row chevron. */
+.faq-chevron svg {
+    width: 16px;
+    height: 16px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.8;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+/* =========================================================
+   LATEST ANNOUNCEMENTS CARD
+   Recreates the top information-column card from the employee
+   dashboard reference.
+   ========================================================= */
+.announcements-card {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    min-height: 330px;
+    padding: 18px 18px 15px;
+    border: 1px solid #e0e6ef;
+    border-radius: 11px;
+    background: #ffffff;
+    box-shadow: 0 8px 24px rgba(32, 51, 87, 0.05);
+    box-sizing: border-box;
+}
+
+
+/* =========================================================
+   ANNOUNCEMENTS CARD HEADER
+   Aligns the card heading with the View all action.
+   ========================================================= */
+.announcements-card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 14px;
+}
+
+/* Style the card heading. */
+.announcements-card-header h2 {
+    margin: 0;
+    color: #15203b;
+    font-size: 13px;
+    font-weight: 700;
+}
+
+/* Style the compact View all action. */
+.announcements-card-header a {
+    flex: 0 0 auto;
+    color: #286ce5;
+    font-size: 10px;
+    font-weight: 600;
+    text-decoration: none;
+}
+
+/* Add subtle hover feedback. */
+.announcements-card-header a:hover {
+    text-decoration: underline;
+}
+
+
+/* =========================================================
+   ANNOUNCEMENT LIST
+   Stacks the three notices with thin separators.
+   ========================================================= */
+.announcements-list {
+    display: flex;
+    flex-direction: column;
+    margin-top: 13px;
+}
+
+/* Create each announcement row. */
+.announcement-item {
+    display: grid;
+    grid-template-columns: 38px minmax(0, 1fr);
+    align-items: start;
+    gap: 11px;
+    min-width: 0;
+    padding: 12px 0;
+}
+
+/* Separate adjacent announcements. */
+.announcement-item + .announcement-item {
+    border-top: 1px solid #edf0f4;
+}
+
+
+/* =========================================================
+   ANNOUNCEMENT ICONS
+   Uses distinct category colours matching the reference.
+   ========================================================= */
+.announcement-icon {
+    display: grid;
+    place-items: center;
+    width: 35px;
+    height: 35px;
+    border-radius: 8px;
+}
+
+/* Keep all announcement icons crisp and consistent. */
+.announcement-icon svg {
+    width: 19px;
+    height: 19px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.7;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+/* Purple leave-policy treatment. */
+.announcement-icon-policy {
+    color: #8952e8;
+    background: #f3ecff;
+}
+
+/* Orange maintenance treatment. */
+.announcement-icon-maintenance {
+    color: #ed871d;
+    background: #fff2e4;
+}
+
+/* Green employee-wellness treatment. */
+.announcement-icon-wellness {
+    color: #28a759;
+    background: #eaf8ef;
+}
+
+
+/* =========================================================
+   ANNOUNCEMENT WORDING
+   Groups each notice title, description, and publication date.
+   ========================================================= */
+.announcement-copy {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+}
+
+/* Style the announcement title. */
+.announcement-copy strong {
+    color: #263149;
+    font-size: 10px;
+    font-weight: 600;
+}
+
+/* Style the announcement summary. */
+.announcement-copy p {
+    margin: 4px 0 6px;
+    color: #737d91;
+    font-size: 9px;
+    line-height: 1.4;
+}
+
+/* Style the publication date. */
+.announcement-copy time {
+    color: #9299a7;
+    font-size: 8px;
+}
+
+
+/* =========================================================
+   ANNOUNCEMENTS CARD FOOTER
+   Links employees to the complete announcement area.
+   ========================================================= */
+.announcements-card-footer {
+    display: inline-flex;
+    align-items: center;
+    gap: 9px;
+    width: fit-content;
+    margin-top: auto;
+    padding-top: 11px;
+    color: #286ce5;
+    font-size: 10px;
+    font-weight: 600;
+    text-decoration: none;
+}
+
+/* Add subtle hover feedback to the footer action. */
+.announcements-card-footer:hover {
+    text-decoration: underline;
+}
+
+/* =========================================================
+   UPCOMING EVENTS CARD
+   Recreates the company-calendar card beneath the latest
+   announcements section in the dashboard reference.
+   ========================================================= */
+.upcoming-events-card {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    min-height: 290px;
+    padding: 18px;
+    border: 1px solid #e0e6ef;
+    border-radius: 11px;
+    background: #ffffff;
+    box-shadow: 0 8px 24px rgba(32, 51, 87, 0.05);
+    box-sizing: border-box;
+}
+
+
+/* =========================================================
+   UPCOMING EVENTS HEADER
+   Aligns the card title with the calendar action.
+   ========================================================= */
+.upcoming-events-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 14px;
+}
+
+/* Style the card heading. */
+.upcoming-events-header h2 {
+    margin: 0;
+    color: #15203b;
+    font-size: 13px;
+    font-weight: 700;
+}
+
+/* Style the View calendar action. */
+.upcoming-events-header a {
+    flex: 0 0 auto;
+    color: #286ce5;
+    font-size: 10px;
+    font-weight: 600;
+    text-decoration: none;
+}
+
+/* Add restrained hover feedback. */
+.upcoming-events-header a:hover {
+    text-decoration: underline;
+}
+
+
+/* =========================================================
+   UPCOMING EVENT LIST
+   Stacks the three event rows with subtle separators.
+   ========================================================= */
+.upcoming-events-list {
+    display: flex;
+    flex-direction: column;
+    margin-top: 14px;
+}
+
+/* Create the individual event row. */
+.upcoming-event-item {
+    display: grid;
+    grid-template-columns: 43px minmax(0, 1fr);
+    align-items: center;
+    gap: 12px;
+    min-width: 0;
+    padding: 12px 0;
+}
+
+/* Separate neighbouring events. */
+.upcoming-event-item + .upcoming-event-item {
+    border-top: 1px solid #edf0f4;
+}
+
+
+/* =========================================================
+   EVENT DATE TILE
+   Recreates the compact month-and-day calendar treatment.
+   ========================================================= */
+.event-date-card {
+    display: flex;
+    align-items: center;
+    flex-direction: column;
+    justify-content: center;
+    width: 41px;
+    height: 46px;
+    border-radius: 7px;
+    text-decoration: none;
+    background: #eef8f3;
+    box-sizing: border-box;
+}
+
+/* Style the abbreviated month. */
+.event-date-card span {
+    color: #66758c;
+    font-size: 8px;
+    font-weight: 600;
+    letter-spacing: 0.4px;
+}
+
+/* Emphasise the calendar day. */
+.event-date-card strong {
+    margin-top: 2px;
+    color: #24334c;
+    font-size: 15px;
+    line-height: 1;
+    font-weight: 700;
+}
+
+
+/* =========================================================
+   EVENT DETAILS
+   Groups the event title, time, and location.
+   ========================================================= */
+.event-details {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    min-width: 0;
+}
+
+/* Align the coloured event indicator with the title. */
+.event-title-row {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    min-width: 0;
+}
+
+/* Style the event title. */
+.event-title-row strong {
+    overflow: hidden;
+    color: #28334b;
+    font-size: 10px;
+    font-weight: 600;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* Style the scheduled time. */
+.event-details > span {
+    color: #68758b;
+    font-size: 9px;
+}
+
+/* Style the event location or meeting type. */
+.event-details small {
+    color: #9299a7;
+    font-size: 8px;
+}
+
+
+/* =========================================================
+   EVENT STATUS INDICATORS
+   Uses green, blue, and purple to distinguish event types.
+   ========================================================= */
+.event-status-dot {
+    flex: 0 0 7px;
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+}
+
+/* Team meeting indicator. */
+.event-status-green {
+    background: #2eb85c;
+}
+
+/* Company event indicator. */
+.event-status-blue {
+    background: #3479e7;
+}
+
+/* Wellness event indicator. */
+.event-status-purple {
+    background: #8058df;
+}
+
+/* =========================================================
+   EMPLOYEE HELP CARD
+   Recreates the soft-blue HR support card at the bottom of
+   the dashboard information column.
+   ========================================================= */
+.dashboard-help-card {
+    position: relative;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 128px;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+    min-height: 190px;
+    padding: 21px 14px 20px 18px;
+    overflow: hidden;
+    border: 1px solid #dce9f8;
+    border-radius: 11px;
+    background:
+        radial-gradient(
+            circle at 88% 30%,
+            rgba(92, 166, 244, 0.2),
+            transparent 39%
+        ),
+        linear-gradient(
+            135deg,
+            #f3f8ff 0%,
+            #e5f1ff 100%
+        );
+    box-shadow: 0 8px 24px rgba(32, 83, 151, 0.06);
+    box-sizing: border-box;
+}
+
+
+/* =========================================================
+   HELP-CARD WORDING
+   Groups the heading, supporting text, and assistant action.
+   ========================================================= */
+.dashboard-help-copy {
+    position: relative;
+    z-index: 2;
+    min-width: 0;
+}
+
+/* Style the help-card heading. */
+.dashboard-help-copy h2 {
+    margin: 0;
+    color: #15203b;
+    font-size: 14px;
+    font-weight: 700;
+}
+
+/* Style the supporting help message. */
+.dashboard-help-copy p {
+    max-width: 150px;
+    margin: 13px 0 18px;
+    color: #64728a;
+    font-size: 10px;
+    line-height: 1.55;
+}
+
+/* Create the white HR-assistant action button. */
+.dashboard-help-button {
+    min-height: 37px;
+    padding: 0 13px;
+    border: 1px solid #e0e7f0;
+    border-radius: 6px;
+    color: #1c315b;
+    font-family: inherit;
+    font-size: 10px;
+    font-weight: 700;
+    cursor: pointer;
+    background: #ffffff;
+    box-shadow: 0 5px 13px rgba(40, 75, 130, 0.08);
+}
+
+/* Add subtle feedback without moving the card. */
+.dashboard-help-button:hover {
+    border-color: #bfd2ef;
+    background: #fafdff;
+}
+
+
+/* =========================================================
+   TEMPORARY HR ROBOT
+   Matches the reference’s white-and-blue assistant while
+   preserving a clean image-replacement area for later.
+   ========================================================= */
+.dashboard-help-robot {
+    position: absolute;
+    right: 2px;
+    bottom: -5px;
+    z-index: 1;
+    width: 132px;
+    height: 156px;
+}
+
+/* Allow the illustration to fill its reserved area. */
+.dashboard-help-robot svg {
+    display: block;
+    width: 100%;
+    height: 100%;
+    overflow: visible;
+}
+
+/* Style the robot antenna. */
+.help-robot-antenna {
+    fill: none;
+    stroke: #286add;
+    stroke-width: 5;
+    stroke-linecap: round;
+}
+
+/* Style the glowing antenna tip. */
+.help-robot-antenna-tip {
+    fill: #35bed1;
+    stroke: #ffffff;
+    stroke-width: 3;
+}
+
+/* Create the white robot head. */
+.help-robot-head {
+    fill: #ffffff;
+    stroke: #c8dbef;
+    stroke-width: 2;
+    filter: drop-shadow(0 7px 8px rgba(44, 92, 162, 0.15));
+}
+
+/* Create the dark navy face display. */
+.help-robot-face {
+    fill: #17396f;
+}
+
+/* Create the bright robot eyes. */
+.help-robot-eye {
+    fill: #ffffff;
+}
+
+/* Create the friendly robot smile. */
+.help-robot-smile {
+    fill: none;
+    stroke: #5ed7e1;
+    stroke-width: 3;
+    stroke-linecap: round;
+}
+
+/* Style the short robot neck. */
+.help-robot-neck {
+    fill: #dceafa;
+}
+
+/* Create the main white robot body. */
+.help-robot-body {
+    fill: #ffffff;
+    stroke: #c8dbef;
+    stroke-width: 2;
+}
+
+/* Create the blue chest display. */
+.help-robot-chest {
+    fill: #2769d8;
+}
+
+/* Style the robot arms. */
+.help-robot-arm {
+    fill: none;
+    stroke: #ffffff;
+    stroke-width: 15;
+    stroke-linecap: round;
+    filter: drop-shadow(0 2px 1px rgba(73, 113, 171, 0.18));
+}
+
+/* Style the robot hands. */
+.help-robot-hand {
+    fill: #286add;
+    stroke: #ffffff;
+    stroke-width: 4;
+}
+
+
+/* =========================================================
+   RESPONSIVE HELP CARD
+   Keeps the wording readable when the information column
+   becomes particularly narrow.
+   ========================================================= */
+@media (max-width: 420px) {
+    .dashboard-help-card {
+        grid-template-columns: 1fr;
+        min-height: 230px;
+    }
+
+    /* Move the temporary robot farther into the corner. */
+    .dashboard-help-robot {
+        right: 0;
+        bottom: -10px;
+        opacity: 0.72;
+    }
+}

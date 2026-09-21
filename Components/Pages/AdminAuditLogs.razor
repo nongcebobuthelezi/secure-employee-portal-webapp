@@ -1,0 +1,159 @@
+@* Administrator-only audit-log console for traceable account and permission changes. *@
+@page "/admin/audit-logs"
+@layout EmployeeLayout
+@rendermode InteractiveServer
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Identity
+@using Microsoft.EntityFrameworkCore
+@using SecureEmployeePortal.Data
+@using SecureEmployeePortal.Data.Entities
+@attribute [Authorize(Roles = "Administrator")]
+@inject IDbContextFactory<ApplicationDbContext> DbFactory
+@inject UserManager<ApplicationUser> UserManager
+
+<PageTitle>Audit Logs | Secure Employee Portal</PageTitle>
+
+<section class="portal-page">
+    <header class="portal-page-header">
+        <div>
+            <p class="eyebrow">Administrator only</p>
+            <h1>Audit Logs</h1>
+            <p>Trace who changed an account, role or access decision, what changed, when it happened and whether the operation succeeded.</p>
+        </div>
+        <a class="portal-secondary-link" href="/admin">Back to admin</a>
+    </header>
+
+    <article class="portal-card">
+        <div class="admin-filter-row admin-filter-row-four">
+            <label class="portal-search-field">
+                <span>Search</span>
+                <input @bind="SearchTerm" @bind:event="oninput" placeholder="Actor, target or action" />
+            </label>
+            <label>
+                <span>Action</span>
+                <select @bind="ActionFilter">
+                    <option value="">All actions</option>
+                    @foreach (var action in ActionTypes)
+                    {
+                        <option value="@action">@Humanize(action)</option>
+                    }
+                </select>
+            </label>
+            <label>
+                <span>Result</span>
+                <select @bind="ResultFilter">
+                    <option value="">All results</option>
+                    <option value="success">Success</option>
+                    <option value="failed">Failed</option>
+                </select>
+            </label>
+            <label>
+                <span>Period</span>
+                <select @bind="PeriodFilter">
+                    <option value="7">Last 7 days</option>
+                    <option value="30">Last 30 days</option>
+                    <option value="90">Last 90 days</option>
+                    <option value="0">All loaded</option>
+                </select>
+            </label>
+        </div>
+
+        @if (!Loaded)
+        {
+            <div class="portal-state-card">Loading audit records…</div>
+        }
+        else if (FilteredLogs.Count == 0)
+        {
+            <div class="portal-empty-state">No audit records match the current filters.</div>
+        }
+        else
+        {
+            <div class="portal-table-wrap">
+                <table class="portal-table portal-table-wide">
+                    <thead><tr><th>When</th><th>Actor</th><th>Action</th><th>Target</th><th>Previous</th><th>New</th><th>Result</th></tr></thead>
+                    <tbody>
+                    @foreach (var row in FilteredLogs)
+                    {
+                        <tr>
+                            <td>@row.Log.OccurredAt.ToLocalTime().ToString("dd MMM yyyy HH:mm")</td>
+                            <td>@row.ActorLabel</td>
+                            <td><strong>@Humanize(row.Log.ActionType)</strong></td>
+                            <td>@row.TargetLabel</td>
+                            <td>@SafeValue(row.Log.PreviousValue)</td>
+                            <td>@SafeValue(row.Log.NewValue)</td>
+                            <td><span class="@(row.Log.Succeeded ? "result-success" : "result-failure")">@(row.Log.Succeeded ? "Success" : "Failed")</span></td>
+                        </tr>
+                    }
+                    </tbody>
+                </table>
+            </div>
+        }
+    </article>
+
+    <div class="portal-warning-message portal-section-space">Passwords, password-reset tokens and application secrets are never intended to appear in audit values.</div>
+</section>
+
+@code {
+    private List<AuditLogRow> Logs { get; set; } = [];
+    private List<string> ActionTypes { get; set; } = [];
+    private string SearchTerm { get; set; } = string.Empty;
+    private string ActionFilter { get; set; } = string.Empty;
+    private string ResultFilter { get; set; } = string.Empty;
+    private string PeriodFilter { get; set; } = "30";
+    private bool Loaded { get; set; }
+
+    private List<AuditLogRow> FilteredLogs => Logs
+        .Where(row => string.IsNullOrWhiteSpace(SearchTerm)
+            || row.ActorLabel.Contains(SearchTerm, StringComparison.OrdinalIgnoreCase)
+            || row.TargetLabel.Contains(SearchTerm, StringComparison.OrdinalIgnoreCase)
+            || row.Log.ActionType.Contains(SearchTerm, StringComparison.OrdinalIgnoreCase))
+        .Where(row => string.IsNullOrWhiteSpace(ActionFilter) || row.Log.ActionType == ActionFilter)
+        .Where(row => ResultFilter switch
+        {
+            "success" => row.Log.Succeeded,
+            "failed" => !row.Log.Succeeded,
+            _ => true
+        })
+        .Where(row => int.TryParse(PeriodFilter, out var days) && days > 0
+            ? row.Log.OccurredAt >= DateTimeOffset.UtcNow.AddDays(-days)
+            : true)
+        .ToList();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await using var db = await DbFactory.CreateDbContextAsync();
+        var logs = await db.AuditLogs
+            .OrderByDescending(item => item.OccurredAt)
+            .Take(500)
+            .AsNoTracking()
+            .ToListAsync();
+
+        var userIds = logs.SelectMany(item => new[] { item.ActorUserId, item.TargetUserId })
+            .Where(id => !string.IsNullOrWhiteSpace(id))
+            .Distinct()
+            .ToList();
+        var users = await UserManager.Users
+            .Where(user => userIds.Contains(user.Id))
+            .AsNoTracking()
+            .ToDictionaryAsync(user => user.Id, user => string.IsNullOrWhiteSpace(user.FullName) ? user.Email ?? user.Id : $"{user.FullName} ({user.Email})");
+
+        string Label(string? id) => !string.IsNullOrWhiteSpace(id) && users.TryGetValue(id, out var value) ? value : "—";
+        Logs = logs.Select(item => new AuditLogRow(item, Label(item.ActorUserId), Label(item.TargetUserId))).ToList();
+        ActionTypes = logs.Select(item => item.ActionType).Distinct().OrderBy(item => item).ToList();
+        Loaded = true;
+    }
+
+    private static string Humanize(string value) => value switch
+    {
+        "AccountCreated" => "Account created",
+        "AccountStatusChanged" => "Account status changed",
+        "RoleChanged" => "Role changed",
+        "ProfileUpdated" => "Profile updated",
+        "AccessRequestReviewed" => "Access request reviewed",
+        _ => value
+    };
+
+    private static string SafeValue(string? value) => string.IsNullOrWhiteSpace(value) ? "—" : value;
+
+    private sealed record AuditLogRow(AuditLog Log, string ActorLabel, string TargetLabel);
+}

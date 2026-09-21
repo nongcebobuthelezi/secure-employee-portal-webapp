@@ -1,0 +1,197 @@
+# Builds, tests and exercises the portfolio release candidate.
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v6
+
+      - name: Set up .NET
+        uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: '10.0.301'
+
+      - name: Restore local tools
+        run: dotnet tool restore
+
+      - name: Restore dependencies
+        run: dotnet restore SecureEmployeePortal.csproj
+
+      - name: Build application
+        run: dotnet build SecureEmployeePortal.csproj --configuration Release --no-restore -p:TreatWarningsAsErrors=true
+
+      - name: Run automated tests
+        run: >-
+          dotnet test tests/SecureEmployeePortal.Tests/SecureEmployeePortal.Tests.csproj
+          --configuration Release
+          -p:TreatWarningsAsErrors=true
+          --logger "trx;LogFileName=release-gate.trx"
+          --results-directory TestResults
+
+      - name: Verify automated test inventory
+        shell: bash
+        run: |
+          python - <<'PY'
+          import xml.etree.ElementTree as ET
+
+          expected = 74
+          counters = next(
+              (element for element in ET.parse("TestResults/release-gate.trx").iter()
+               if element.tag.endswith("Counters")),
+              None,
+          )
+          if counters is None:
+              raise SystemExit("TRX result did not contain a Counters element.")
+
+          total = int(counters.attrib.get("total", "0"))
+          passed = int(counters.attrib.get("passed", "0"))
+          failed = int(counters.attrib.get("failed", "0"))
+
+          if total != expected:
+              raise SystemExit(
+                  f"Automated test inventory changed: expected {expected} executions, discovered {total}."
+              )
+          if passed != expected or failed != 0:
+              raise SystemExit(
+                  f"Automated test gate failed: expected {expected} passed / 0 failed, "
+                  f"got {passed} passed / {failed} failed."
+              )
+
+          print(f"Verified automated test inventory: {passed}/{expected} passed.")
+          PY
+
+      - name: Verify EF Core model matches migrations
+        env:
+          ASPNETCORE_ENVIRONMENT: Development
+        run: dotnet ef migrations has-pending-model-changes --project SecureEmployeePortal.csproj
+
+  runtime-e2e:
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v6
+
+      - name: Set up .NET
+        uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: '10.0.301'
+
+      - name: Restore and Release-build portal
+        run: |
+          dotnet restore SecureEmployeePortal.csproj
+          dotnet build SecureEmployeePortal.csproj --configuration Release --no-restore -p:TreatWarningsAsErrors=true
+
+      - name: Start isolated SQL Server
+        shell: bash
+        run: |
+          set -euo pipefail
+          E2E_PASS="Aa1!$(python -c 'import secrets; print(secrets.token_hex(18))')"
+          echo "::add-mask::$E2E_PASS"
+          {
+            echo "E2E_ADMIN_PASSWORD=$E2E_PASS"
+            echo "E2E_EMPLOYEE_PASSWORD=$E2E_PASS"
+            echo "SeedAdmin__Password=$E2E_PASS"
+            echo "PORTAL_CONNECTION=Server=127.0.0.1,1433;Database=SecureEmployeePortalE2E;User Id=sa;Password=$E2E_PASS;TrustServerCertificate=True;Encrypt=False;MultipleActiveResultSets=true"
+          } >> "$GITHUB_ENV"
+
+          docker run -d --name portal-sql \
+            -e ACCEPT_EULA=Y \
+            -e MSSQL_SA_PASSWORD="$E2E_PASS" \
+            -p 1433:1433 \
+            mcr.microsoft.com/mssql/server:2022-latest
+
+      - name: Wait for SQL Server
+        shell: bash
+        run: |
+          python - <<'PY'
+          import socket, time
+          deadline = time.time() + 90
+          while time.time() < deadline:
+              try:
+                  with socket.create_connection(("127.0.0.1", 1433), timeout=2):
+                      print("SQL Server TCP endpoint is accepting connections.")
+                      break
+              except OSError:
+                  time.sleep(2)
+          else:
+              raise SystemExit("SQL Server did not open port 1433 within 90 seconds.")
+          PY
+          sleep 8
+
+      - name: Start portal and wait for health
+        shell: bash
+        env:
+          ASPNETCORE_ENVIRONMENT: Development
+          ASPNETCORE_URLS: http://127.0.0.1:5080
+          SeedAdmin__Email: e2e.admin@secureportal.test
+          E2E_ADMIN_EMAIL: e2e.admin@secureportal.test
+          E2E_EMPLOYEE_EMAIL: nandi.employee@secureportal.test
+          PORTAL_BASE_URL: http://127.0.0.1:5080
+          E2E_OUTPUT_DIR: artifacts/runtime-evidence
+        run: |
+          set -euo pipefail
+          mkdir -p artifacts/runtime-evidence
+          export ConnectionStrings__DefaultConnection="$PORTAL_CONNECTION"
+          dotnet run --project SecureEmployeePortal.csproj --configuration Release --no-build --urls "$ASPNETCORE_URLS" > artifacts/runtime-evidence/app.log 2>&1 &
+          echo $! > artifacts/runtime-evidence/app.pid
+
+          for attempt in {1..75}; do
+            if curl -fsS "$PORTAL_BASE_URL/health" >/dev/null; then
+              echo "Portal health endpoint is ready."
+              exit 0
+            fi
+
+            if ! kill -0 "$(cat artifacts/runtime-evidence/app.pid)" 2>/dev/null; then
+              echo "Portal exited before becoming healthy."
+              cat artifacts/runtime-evidence/app.log
+              exit 1
+            fi
+
+            sleep 2
+          done
+
+          echo "Portal did not become healthy within the timeout."
+          cat artifacts/runtime-evidence/app.log
+          exit 1
+
+      - name: Install Playwright Chromium
+        run: |
+          python -m pip install --disable-pip-version-check playwright
+          python -m playwright install --with-deps chromium
+
+      - name: Run real browser journey and capture runtime screenshots
+        env:
+          E2E_ADMIN_EMAIL: e2e.admin@secureportal.test
+          E2E_EMPLOYEE_EMAIL: nandi.employee@secureportal.test
+          PORTAL_BASE_URL: http://127.0.0.1:5080
+          E2E_OUTPUT_DIR: artifacts/runtime-evidence
+        run: python scripts/runtime-e2e.py
+
+      - name: Show portal log tail
+        if: always()
+        shell: bash
+        run: |
+          if [ -f artifacts/runtime-evidence/app.log ]; then
+            tail -n 160 artifacts/runtime-evidence/app.log
+          fi
+
+      - name: Upload runtime evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: secure-employee-portal-runtime-evidence
+          path: artifacts/runtime-evidence
+          if-no-files-found: error
+          retention-days: 14

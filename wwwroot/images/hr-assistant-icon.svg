@@ -1,0 +1,87 @@
+<!-- ========================================================
+     HR ASSISTANT ICON
+     Compact robot-head artwork for the top Need help button.
+     The transparent SVG remains sharp at every screen size.
+     ======================================================== -->
+<svg
+    xmlns="http://www.w3.org/2000/svg"
+    viewBox="0 0 64 64"
+    role="img"
+    aria-labelledby="robotTitle">
+
+    <title id="robotTitle">HR assistant robot</title>
+
+    <!-- Soft blue glow behind the assistant. -->
+    <circle
+        cx="32"
+        cy="34"
+        r="25"
+        fill="#EAF4FF" />
+
+    <!-- Robot antenna. -->
+    <path
+        d="M32 12V7"
+        fill="none"
+        stroke="#2D71DF"
+        stroke-width="3"
+        stroke-linecap="round" />
+
+    <!-- Cyan antenna light. -->
+    <circle
+        cx="32"
+        cy="6"
+        r="3.5"
+        fill="#42CFD8"
+        stroke="#FFFFFF"
+        stroke-width="2" />
+
+    <!-- White robot-head shell. -->
+    <rect
+        x="11"
+        y="15"
+        width="42"
+        height="36"
+        rx="15"
+        fill="#FFFFFF"
+        stroke="#BFD6EE"
+        stroke-width="2" />
+
+    <!-- Dark face display. -->
+    <rect
+        x="17"
+        y="22"
+        width="30"
+        height="21"
+        rx="10"
+        fill="#173B76" />
+
+    <!-- Friendly assistant eyes. -->
+    <circle
+        cx="26"
+        cy="31"
+        r="2.7"
+        fill="#FFFFFF" />
+
+    <circle
+        cx="38"
+        cy="31"
+        r="2.7"
+        fill="#FFFFFF" />
+
+    <!-- Friendly cyan smile. -->
+    <path
+        d="M27 37c3 2.8 7 2.8 10 0"
+        fill="none"
+        stroke="#56D6DE"
+        stroke-width="2.4"
+        stroke-linecap="round" />
+
+    <!-- Small blue neck/base detail. -->
+    <rect
+        x="25"
+        y="50"
+        width="14"
+        height="6"
+        rx="3"
+        fill="#2E72DF" />
+</svg>

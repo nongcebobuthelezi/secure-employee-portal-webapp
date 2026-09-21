@@ -1,0 +1,127 @@
+@* Administrator user-management page with search and account/role filtering. *@
+@page "/admin/users"
+@layout EmployeeLayout
+@rendermode InteractiveServer
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Identity
+@using Microsoft.EntityFrameworkCore
+@using SecureEmployeePortal.Data
+@using SecureEmployeePortal.Services
+@attribute [Authorize(Roles = "Administrator")]
+@inject UserManager<ApplicationUser> UserManager
+
+<PageTitle>User Management | Secure Employee Portal</PageTitle>
+
+<section class="portal-page">
+    <header class="portal-page-header">
+        <div>
+            <p class="eyebrow">Administrator only</p>
+            <h1>User Management</h1>
+            <p>Search employee accounts and open a protected account record for security administration.</p>
+        </div>
+        <div class="portal-header-actions">
+            <a class="portal-secondary-link" href="/admin">Back to admin</a>
+            <a class="portal-primary-link" href="/admin/users/create">Create user</a>
+        </div>
+    </header>
+
+    <article class="portal-card">
+        <div class="admin-filter-row">
+            <label class="portal-search-field">
+                <span>Search users</span>
+                <input @bind="SearchTerm" @bind:event="oninput" placeholder="Name, email, employee number" />
+            </label>
+            <label>
+                <span>Status</span>
+                <select @bind="StatusFilter">
+                    <option value="">All statuses</option>
+                    @foreach (var status in Enum.GetNames<AccountStatus>())
+                    {
+                        <option value="@status">@status</option>
+                    }
+                </select>
+            </label>
+            <label>
+                <span>Role</span>
+                <select @bind="RoleFilter">
+                    <option value="">All roles</option>
+                    <option value="Employee">Employee</option>
+                    <option value="Manager">Manager</option>
+                    <option value="Administrator">Administrator</option>
+                </select>
+            </label>
+        </div>
+
+        @if (!Loaded)
+        {
+            <div class="portal-state-card">Loading employee accounts…</div>
+        }
+        else if (FilteredUsers.Count == 0)
+        {
+            <div class="portal-empty-state">No users match the current filters.</div>
+        }
+        else
+        {
+            <div class="portal-table-wrap">
+                <table class="portal-table">
+                    <thead>
+                        <tr><th>Employee</th><th>Email</th><th>Employee no.</th><th>Department</th><th>Role</th><th>Status</th><th>Last login</th><th></th></tr>
+                    </thead>
+                    <tbody>
+                    @foreach (var row in FilteredUsers)
+                    {
+                        <tr>
+                            <td><strong>@row.User.FullName</strong><br /><small>@row.User.JobTitle</small></td>
+                            <td>@row.User.Email</td>
+                            <td>@row.User.EmployeeNumber</td>
+                            <td>@row.User.Department</td>
+                            <td>@row.Role</td>
+                            <td><span class="request-status @row.User.AccountStatus.ToString().ToLowerInvariant()">@row.User.AccountStatus</span></td>
+                            <td>@(row.User.LastLoginAt?.ToLocalTime().ToString("dd MMM yyyy HH:mm") ?? "Never")</td>
+                            <td><a class="portal-text-link" href="@($"/admin/users/{row.User.Id}")">Manage →</a></td>
+                        </tr>
+                    }
+                    </tbody>
+                </table>
+            </div>
+        }
+    </article>
+</section>
+
+@code {
+    private List<UserRow> Users { get; set; } = [];
+    private string SearchTerm { get; set; } = string.Empty;
+    private string StatusFilter { get; set; } = string.Empty;
+    private string RoleFilter { get; set; } = string.Empty;
+    private bool Loaded { get; set; }
+
+    private List<UserRow> FilteredUsers => Users.Where(row =>
+        (string.IsNullOrWhiteSpace(StatusFilter) || row.User.AccountStatus.ToString() == StatusFilter)
+        && (string.IsNullOrWhiteSpace(RoleFilter) || row.Role == RoleFilter)
+        && (string.IsNullOrWhiteSpace(SearchTerm)
+            || row.User.FullName.Contains(SearchTerm, StringComparison.OrdinalIgnoreCase)
+            || (row.User.Email?.Contains(SearchTerm, StringComparison.OrdinalIgnoreCase) ?? false)
+            || row.User.EmployeeNumber.Contains(SearchTerm, StringComparison.OrdinalIgnoreCase)))
+        .ToList();
+
+    protected override async Task OnInitializedAsync()
+    {
+        var users = await UserManager.Users
+            .AsNoTracking()
+            .OrderBy(user => user.FirstName)
+            .ThenBy(user => user.LastName)
+            .ToListAsync();
+
+        foreach (var user in users)
+        {
+            var roles = await UserManager.GetRolesAsync(user);
+            var portalRoles = roles.Where(AccountAccessRules.IsKnownRole).ToArray();
+            var roleLabel = portalRoles.Length == 0 ? "No portal role" : string.Join(", ", portalRoles);
+            Users.Add(new UserRow(user, roleLabel));
+        }
+
+        Loaded = true;
+    }
+
+    private sealed record UserRow(ApplicationUser User, string Role);
+}

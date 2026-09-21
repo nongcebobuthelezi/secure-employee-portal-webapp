@@ -1,0 +1,22 @@
+@* Explains that the current signed-in role cannot access the requested resource. *@
+@page "/access-denied"
+@layout AuthLayout
+@using Microsoft.AspNetCore.Authorization
+@attribute [Authorize]
+
+<PageTitle>Access Denied | Secure Employee Portal</PageTitle>
+
+<main class="simple-status-page">
+    <section class="simple-status-card">
+        <div class="simple-status-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24"><path d="M12 3 20 6v6c0 5-2.9 8-8 10-5.1-2-8-5-8-10V6Z" /><path d="M9 9l6 6" /><path d="m15 9-6 6" /></svg>
+        </div>
+        <p class="eyebrow">Protected resource</p>
+        <h1>Access denied</h1>
+        <p>You are signed in, but your current role does not have permission to open this area.</p>
+        <div class="status-actions">
+            <a class="portal-primary-link" href="/dashboard">Return to dashboard</a>
+            <a class="portal-secondary-link" href="/profile">View my account</a>
+        </div>
+    </section>
+</main>

@@ -1,0 +1,150 @@
+@* Narrow employee workflow for requesting access to a protected resource. *@
+@page "/requests"
+@layout EmployeeLayout
+@rendermode InteractiveServer
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Identity
+@using SecureEmployeePortal.Data
+@using SecureEmployeePortal.Data.Entities
+@using SecureEmployeePortal.Models
+@using SecureEmployeePortal.Services
+@attribute [Authorize]
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject UserManager<ApplicationUser> UserManager
+@inject AccessRequestService AccessRequestService
+
+<PageTitle>Access Requests | Secure Employee Portal</PageTitle>
+
+<section class="portal-page">
+    <header class="portal-page-header">
+        <div>
+            <p class="eyebrow">Employee self-service</p>
+            <h1>Access Requests</h1>
+            <p>Request access to a protected workplace resource and follow the administrator decision from your own account.</p>
+        </div>
+        <a class="portal-secondary-link" href="/dashboard">Back to dashboard</a>
+    </header>
+
+    <div class="portal-grid portal-grid-two">
+        <article class="portal-card">
+            <p class="eyebrow">New request</p>
+            <h2>Request protected access</h2>
+            <p class="portal-muted">Use this for a resource you genuinely need. Requests remain pending until an authorised administrator reviews them.</p>
+
+            @if (!string.IsNullOrWhiteSpace(StatusMessage))
+            {
+                <div class="@(ActionSucceeded ? "portal-success-message" : "portal-error-message")" role="status">@StatusMessage</div>
+            }
+
+            <EditForm Model="Input" OnValidSubmit="SubmitAsync" FormName="access-request">
+                <DataAnnotationsValidator />
+                <div class="portal-form-stack">
+                    <label>
+                        <span>Requested resource</span>
+                        <InputText @bind-Value="Input.RequestedResource" maxlength="160" placeholder="Example: Finance reporting workspace" />
+                        <ValidationMessage For="() => Input.RequestedResource" />
+                    </label>
+                    <label>
+                        <span>Business reason</span>
+                        <InputTextArea @bind-Value="Input.Reason" rows="5" minlength="10" maxlength="1000" placeholder="Explain why you need this access." />
+                        <ValidationMessage For="() => Input.Reason" />
+                    </label>
+                </div>
+                <button class="portal-primary-button" type="submit" disabled="@IsBusy">@(IsBusy ? "Submitting…" : "Submit request")</button>
+            </EditForm>
+        </article>
+
+        <article class="portal-card">
+            <p class="eyebrow">Access-control principle</p>
+            <h2>Requesting is not granting</h2>
+            <p class="portal-muted">Submitting this form never changes your role or permissions directly. It creates a database record for an authorised reviewer to approve or reject.</p>
+            <ol class="portal-process-list">
+                <li><strong>You submit</strong><span>The request is linked to your authenticated account.</span></li>
+                <li><strong>Administrator reviews</strong><span>The request stays Pending until a protected admin action occurs.</span></li>
+                <li><strong>Decision is recorded</strong><span>The result creates traceable security and audit activity.</span></li>
+            </ol>
+        </article>
+    </div>
+
+    <article class="portal-card portal-section-space">
+        <div class="portal-card-heading">
+            <div><p class="eyebrow">Your requests only</p><h2>Request history</h2></div>
+            <span class="portal-status-badge">@Requests.Count total</span>
+        </div>
+
+        @if (!Loaded)
+        {
+            <div class="portal-state-card">Loading requests…</div>
+        }
+        else if (Requests.Count == 0)
+        {
+            <div class="portal-empty-state">You have not submitted any access requests yet.</div>
+        }
+        else
+        {
+            <div class="portal-table-wrap">
+                <table class="portal-table">
+                    <thead><tr><th>Requested</th><th>Resource</th><th>Status</th><th>Reviewed</th><th>Decision note</th></tr></thead>
+                    <tbody>
+                    @foreach (var request in Requests)
+                    {
+                        <tr>
+                            <td>@request.RequestedAt.ToLocalTime().ToString("dd MMM yyyy HH:mm")</td>
+                            <td><strong>@request.RequestedResource</strong><br /><small>@request.Reason</small></td>
+                            <td><span class="request-status @request.Status.ToLowerInvariant()">@request.Status</span></td>
+                            <td>@(request.ReviewedAt?.ToLocalTime().ToString("dd MMM yyyy HH:mm") ?? "—")</td>
+                            <td>@(string.IsNullOrWhiteSpace(request.DecisionNote) ? "—" : request.DecisionNote)</td>
+                        </tr>
+                    }
+                    </tbody>
+                </table>
+            </div>
+        }
+    </article>
+</section>
+
+@code {
+    private ApplicationUser? CurrentUser { get; set; }
+    private AccessRequestInputModel Input { get; set; } = new();
+    private List<AccessRequest> Requests { get; set; } = [];
+    private bool Loaded { get; set; }
+    private bool IsBusy { get; set; }
+    private bool ActionSucceeded { get; set; }
+    private string? StatusMessage { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        var state = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        CurrentUser = await UserManager.GetUserAsync(state.User);
+        await ReloadAsync();
+        Loaded = true;
+    }
+
+    private async Task SubmitAsync()
+    {
+        if (CurrentUser is null || IsBusy) return;
+        IsBusy = true;
+        try
+        {
+            var result = await AccessRequestService.SubmitAsync(CurrentUser.Id, Input);
+            ActionSucceeded = result.Success;
+            StatusMessage = result.Message;
+            if (result.Success)
+            {
+                Input = new();
+                await ReloadAsync();
+            }
+        }
+        finally
+        {
+            IsBusy = false;
+        }
+    }
+
+    private async Task ReloadAsync()
+    {
+        Requests = CurrentUser is null
+            ? []
+            : (await AccessRequestService.GetForEmployeeAsync(CurrentUser.Id)).ToList();
+    }
+}

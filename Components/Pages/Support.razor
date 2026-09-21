@@ -1,0 +1,54 @@
+@* Small, deliberate help page so the portal has no dead support destination. *@
+@page "/support"
+@layout EmployeeLayout
+@using Microsoft.AspNetCore.Authorization
+@attribute [Authorize]
+
+<PageTitle>Help & Support | Secure Employee Portal</PageTitle>
+
+<section class="portal-page">
+    <header class="portal-page-header">
+        <div>
+            <p class="eyebrow">Employee help</p>
+            <h1>Help &amp; Support</h1>
+            <p>Quick guidance for account access, password recovery, attendance and access requests.</p>
+        </div>
+        <a class="portal-secondary-link" href="/dashboard?assistant=open">Ask Secure Assistant</a>
+    </header>
+
+    <div class="portal-grid portal-grid-two">
+        <article class="portal-card">
+            <p class="eyebrow">Account access</p>
+            <h2>I cannot sign in</h2>
+            <p class="portal-muted">Check your work email and password first. Repeated failed attempts can temporarily lock the account. Suspended or disabled accounts must be reviewed by an administrator.</p>
+            <a class="portal-text-link" href="/forgot-password">Reset my password →</a>
+        </article>
+
+        <article class="portal-card">
+            <p class="eyebrow">Attendance</p>
+            <h2>My clocking status looks wrong</h2>
+            <p class="portal-muted">The portal prevents duplicate clock-ins and clock-outs without an open session. Review your own attendance history before requesting a correction.</p>
+            <a class="portal-text-link" href="/attendance">Open attendance →</a>
+        </article>
+
+        <article class="portal-card">
+            <p class="eyebrow">Permissions</p>
+            <h2>I need access to another resource</h2>
+            <p class="portal-muted">Use an access request. Submitting a request does not automatically elevate your permissions; an authorised administrator must review it.</p>
+            <a class="portal-text-link" href="/requests">Create access request →</a>
+        </article>
+
+        <article class="portal-card">
+            <p class="eyebrow">Security</p>
+            <h2>I noticed unusual account activity</h2>
+            <p class="portal-muted">Change your password and review recent security activity. For a real deployment, your organisation would provide a dedicated internal support channel.</p>
+            <a class="portal-text-link" href="/security">Review my security →</a>
+        </article>
+    </div>
+
+    <article class="portal-card portal-section-space support-scope-card">
+        <p class="eyebrow">Support scope</p>
+        <h2>When to contact your administrator</h2>
+        <p class="portal-muted">Account suspension, disabled access and role changes require an authorised administrator. Stored attendance entries are read-only in this version, so corrections should follow an authorised support process rather than being silently edited. Password recovery and ordinary account checks can be started directly in the portal.</p>
+    </article>
+</section>

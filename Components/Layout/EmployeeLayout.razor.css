@@ -1,0 +1,576 @@
+/* =========================================================
+   AUTHENTICATED EMPLOYEE SHELL
+   Establishes the permanent dashboard sidebar, top bar,
+   and scrollable employee workspace.
+   ========================================================= */
+.employee-shell {
+    display: grid;
+    grid-template-columns: 270px minmax(0, 1fr);
+    align-items: stretch;
+    width: 100%;
+    min-height: 100vh;
+    font-family: Arial, Helvetica, sans-serif;
+    background: #f4f7fb;
+}
+
+/* =========================================================
+   EMPLOYEE SIDEBAR
+   Uses the deep navy-to-blue gradient from the dashboard
+   reference while supporting a full-height navigation area.
+   ========================================================= */
+.employee-sidebar {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    width: 270px;
+    min-height: 100vh;
+    padding: 18px 16px 20px;
+    overflow: visible;
+    color: #ffffff;
+    background:
+        radial-gradient(
+            circle at 42% 8%,
+            rgba(28, 105, 224, 0.22),
+            transparent 28%
+        ),
+        linear-gradient(
+            180deg,
+            #061838 0%,
+            #082b65 50%,
+            #06439d 100%
+        );
+    box-sizing: border-box;
+}
+
+/* Keep the sidebar scrollbar visually understated. */
+.employee-sidebar::-webkit-scrollbar {
+    width: 5px;
+}
+
+/* Create a subtle sidebar scrollbar thumb. */
+.employee-sidebar::-webkit-scrollbar-thumb {
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.18);
+}
+
+/* =========================================================
+   SIDEBAR HEADER AND BRAND
+   Places the menu button beside the secure-portal identity.
+   ========================================================= */
+.sidebar-header {
+    display: flex;
+    align-items: center;
+    gap: 11px;
+    min-height: 52px;
+}
+
+/* Visual hamburger control from the reference. */
+.sidebar-menu-button {
+    flex: 0 0 auto;
+    display: grid;
+    place-items: center;
+    width: 32px;
+    height: 36px;
+    padding: 0;
+    border: 0;
+    color: #ffffff;
+    cursor: pointer;
+    background: transparent;
+}
+
+/* Size and style the three-line menu icon. */
+.sidebar-menu-button svg {
+    width: 21px;
+    height: 21px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.8;
+    stroke-linecap: round;
+}
+
+/* Keep the complete brand on one clean row. */
+.sidebar-brand {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    min-width: 0;
+    color: inherit;
+    text-decoration: none;
+}
+
+/* Reserve space for the sidebar shield logo. */
+.sidebar-brand-icon {
+    flex: 0 0 auto;
+    display: grid;
+    place-items: center;
+    width: 33px;
+    height: 40px;
+}
+
+/* Size the shield consistently with the reference. */
+.sidebar-brand-icon svg {
+    display: block;
+    width: 33px;
+    height: 40px;
+    overflow: visible;
+}
+
+/* Add subtle blue depth behind the main shield outline. */
+.sidebar-shield-depth {
+    fill: none;
+    stroke: #2055d5;
+    stroke-width: 6;
+    stroke-linejoin: round;
+    opacity: 0.82;
+}
+
+/* Apply the cyan-to-blue gradient to the shield. */
+.sidebar-shield-outline {
+    fill: none;
+    stroke: url(#sidebarShieldGradient);
+    stroke-width: 4;
+    stroke-linejoin: round;
+}
+
+/* Keep the employee figure clear against the navy sidebar. */
+.sidebar-person-head,
+.sidebar-person-body {
+    fill: #ffffff;
+}
+
+/* Keep both brand phrases together on one line. */
+.sidebar-brand-name {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    min-width: 0;
+    white-space: nowrap;
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: -0.25px;
+}
+
+/* “Secure” remains white. */
+.sidebar-brand-secure {
+    color: #ffffff;
+}
+
+/* Match the auth-page cyan and blue brand treatment. */
+.sidebar-brand-gradient {
+    color: #4cd8e0;
+    background: linear-gradient(90deg, #42dce0, #3399f6);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+/* =========================================================
+   SIDEBAR NAVIGATION
+   Creates a compact vertical navigation system with a bright
+   active dashboard item and consistent line icons.
+   ========================================================= */
+.sidebar-navigation {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    margin-top: 18px;
+    padding-bottom: 22px;
+}
+
+/* =========================================================
+   BLAZOR NAVLINK SIDEBAR STYLING
+   ::deep allows this isolated layout stylesheet to reach the
+   anchor elements generated internally by Blazor NavLink.
+   ========================================================= */
+
+/* Shared navigation-item structure. */
+.employee-sidebar ::deep .sidebar-link {
+    display: grid;
+    grid-template-columns: 27px minmax(0, 1fr);
+    align-items: center;
+    gap: 10px;
+    min-height: 41px;
+    padding: 0 13px;
+    border-radius: 7px;
+    color: rgba(255, 255, 255, 0.88);
+    font-size: 13px;
+    font-weight: 500;
+    text-decoration: none;
+    box-sizing: border-box;
+    transition:
+        color 0.18s ease,
+        background 0.18s ease,
+        transform 0.18s ease;
+}
+
+/* Add restrained hover feedback. */
+.employee-sidebar ::deep .sidebar-link:hover {
+    color: #ffffff;
+    text-decoration: none;
+    background: rgba(255, 255, 255, 0.08);
+}
+
+/* Match the bright-blue active Home item from the reference. */
+.employee-sidebar ::deep .sidebar-link.is-active {
+    color: #ffffff;
+    text-decoration: none;
+    background:
+        linear-gradient(
+            90deg,
+            #2765dd 0%,
+            #347bf0 100%
+        );
+    box-shadow:
+        0 8px 18px rgba(0, 32, 100, 0.24),
+        inset 0 1px 0 rgba(255, 255, 255, 0.12);
+}
+
+/* Keep every menu icon aligned inside the same visual box. */
+.employee-sidebar ::deep .sidebar-link-icon {
+    display: grid;
+    place-items: center;
+    width: 25px;
+    height: 25px;
+    color: currentColor;
+}
+
+/* Use clean white outlined icons throughout the navigation. */
+.employee-sidebar ::deep .sidebar-link-icon svg {
+    display: block;
+    width: 21px;
+    height: 21px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.75;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+/* =========================================================
+   SIDEBAR SECURITY CARD
+   Anchors the password-security reminder near the bottom.
+   ========================================================= */
+.sidebar-security-card {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    margin-top: auto;
+    padding: 19px 17px;
+    border: 1px solid rgba(130, 190, 255, 0.4);
+    border-radius: 9px;
+    color: #ffffff;
+    background:
+        linear-gradient(
+            145deg,
+            rgba(10, 56, 125, 0.82),
+            rgba(9, 68, 158, 0.58)
+        );
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+}
+
+/* Create the small circular shield treatment. */
+.sidebar-security-icon {
+    display: grid;
+    place-items: center;
+    width: 31px;
+    height: 31px;
+    margin-bottom: 13px;
+    border: 1px solid rgba(85, 216, 230, 0.76);
+    border-radius: 50%;
+    color: #48d8e3;
+}
+
+/* Keep the security icon fine and lightweight. */
+.sidebar-security-icon svg {
+    width: 18px;
+    height: 18px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.7;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+/* Style the security reminder heading. */
+.sidebar-security-card strong {
+    font-size: 13px;
+    font-weight: 700;
+}
+
+/* Style the supporting security reminder. */
+.sidebar-security-card p {
+    margin: 18px 0 20px;
+    color: rgba(230, 239, 252, 0.82);
+    font-size: 12px;
+    line-height: 1.55;
+}
+
+/* Create the small update-password action. */
+.sidebar-security-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 9px;
+    color: #64ccef;
+    font-size: 12px;
+    font-weight: 600;
+    text-decoration: none;
+}
+
+/* Brighten the security action on hover. */
+.sidebar-security-link:hover {
+    color: #8ee8f2;
+}
+
+/* =========================================================
+   EMPLOYEE WORKSPACE
+   Holds the shared top navigation and current employee page.
+   ========================================================= */
+.employee-workspace {
+    display: grid;
+    grid-template-rows: 68px minmax(0, 1fr);
+    min-width: 0;
+    min-height: 100vh;
+}
+
+/* =========================================================
+   EMPLOYEE TOP NAVIGATION
+   Creates the shared white action bar used throughout the
+   authenticated employee portal.
+   ========================================================= */
+.employee-topbar {
+    position: sticky;
+    top: 0;
+    z-index: 20;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    min-width: 0;
+    min-height: 68px;
+    padding: 0 28px;
+    border-bottom: 1px solid #e0e6ef;
+    background: #ffffff;
+    box-sizing: border-box;
+}
+
+/* Keep help, notifications, and profile actions on one row. */
+.employee-topbar-actions {
+    display: flex;
+    align-items: center;
+    gap: 22px;
+}
+
+
+/* =========================================================
+   TOP-BAR HELP BUTTON
+   Matches the soft outlined assistant action in the reference.
+   ========================================================= */
+.topbar-help-button {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    min-height: 36px;
+    padding: 0 13px;
+    border: 1px solid #d5e3f9;
+    border-radius: 9px;
+    color: #2364d8;
+    font-family: inherit;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    background: #f8fbff;
+}
+
+/* Add restrained hover feedback without changing layout. */
+.topbar-help-button:hover {
+    background: #f1f6ff;
+}
+
+/* Reserve space for the small assistant icon. */
+.topbar-help-icon {
+    display: grid;
+    place-items: center;
+    width: 20px;
+    height: 20px;
+    color: #276fe3;
+}
+
+/* Keep the robot icon thin and consistent with the portal. */
+.topbar-help-icon svg {
+    display: block;
+    width: 20px;
+    height: 20px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.6;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+/* =========================================================
+   TOP-BAR HR ASSISTANT IMAGE
+   Fits the reusable robot artwork inside the existing icon
+   area without resizing or shifting the help button.
+   ========================================================= */
+.topbar-help-icon img {
+    display: block;
+    width: 22px;
+    height: 22px;
+    object-fit: contain;
+}
+
+
+/* =========================================================
+   TOP-BAR NOTIFICATIONS
+   Displays the outlined bell with a red unread-count badge.
+   ========================================================= */
+.topbar-notification-button {
+    position: relative;
+    display: grid;
+    place-items: center;
+    width: 34px;
+    height: 38px;
+    padding: 0;
+    border: 0;
+    color: #17264a;
+    cursor: pointer;
+    background: transparent;
+}
+
+/* Style the notification bell. */
+.topbar-notification-button > svg {
+    width: 22px;
+    height: 22px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.65;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+/* Position the unread-count badge over the bell corner. */
+.topbar-notification-count {
+    position: absolute;
+    top: 0;
+    right: -1px;
+    display: grid;
+    place-items: center;
+    min-width: 15px;
+    height: 15px;
+    padding: 0 3px;
+    border: 2px solid #ffffff;
+    border-radius: 999px;
+    color: #ffffff;
+    font-size: 8px;
+    font-weight: 700;
+    line-height: 1;
+    background: #ef3f45;
+    box-sizing: border-box;
+}
+
+
+/* =========================================================
+   EMPLOYEE PROFILE CONTROL
+   Uses temporary initials until the profile photograph is
+   supplied and added to the project.
+   ========================================================= */
+.topbar-profile-button {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    padding: 0;
+    border: 0;
+    color: #111a35;
+    font-family: inherit;
+    cursor: pointer;
+    background: transparent;
+}
+
+/* Temporary profile-photo replacement. */
+.topbar-avatar-placeholder {
+    display: grid;
+    place-items: center;
+    width: 37px;
+    height: 37px;
+    overflow: hidden;
+    border: 1px solid #dce3ec;
+    border-radius: 50%;
+    color: #ffffff;
+    font-size: 11px;
+    font-weight: 700;
+    background:
+        linear-gradient(
+            145deg,
+            #36cbd5 0%,
+            #2867df 100%
+        );
+    box-shadow: 0 3px 10px rgba(23, 49, 93, 0.12);
+}
+
+/* =========================================================
+   EMPLOYEE PROFILE PHOTOGRAPH
+   Matches the previous initials-circle dimensions while
+   cropping the square photograph neatly inside the avatar.
+   ========================================================= */
+.topbar-avatar-image {
+    display: block;
+    flex: 0 0 37px;
+    width: 37px;
+    height: 37px;
+    border: 1px solid #dce3ec;
+    border-radius: 50%;
+    object-fit: cover;
+    object-position: center 34%;
+    box-shadow: 0 3px 10px rgba(23, 49, 93, 0.12);
+}
+
+/* Keep the full employee name on one line. */
+.topbar-profile-name {
+    white-space: nowrap;
+    font-size: 13px;
+    font-weight: 600;
+}
+
+/* Align the small dropdown chevron. */
+.topbar-profile-chevron {
+    display: grid;
+    place-items: center;
+    width: 17px;
+    height: 17px;
+    color: #152140;
+}
+
+/* Style the profile dropdown indicator. */
+.topbar-profile-chevron svg {
+    width: 17px;
+    height: 17px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.8;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+/* Provide the scrollable dashboard-content surface. */
+.employee-content {
+    min-width: 0;
+    padding: 26px 30px;
+    overflow: visible;
+    background: #f4f7fb;
+    box-sizing: border-box;
+}
+
+/* =========================================================
+   RESPONSIVE EMPLOYEE LAYOUT
+   Temporarily hides the desktop sidebar on smaller screens.
+   The functional mobile drawer will be added later.
+   ========================================================= */
+@media (max-width: 900px) {
+    .employee-shell {
+        grid-template-columns: 1fr;
+    }
+
+    /* Hide the desktop navigation until the drawer is built. */
+    .employee-sidebar {
+        display: none;
+    }
+}

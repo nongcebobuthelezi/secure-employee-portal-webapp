@@ -1,0 +1,1087 @@
+@* =========================================================
+   EMPLOYEE HOME DASHBOARD
+   First authenticated page displayed after successful login.
+   ========================================================= *@
+@page "/dashboard"
+@layout EmployeeLayout
+
+@* Browser-tab title for the employee dashboard. *@
+<PageTitle>Dashboard | Secure Employee Portal</PageTitle>
+
+<section class="dashboard-page">
+
+   @* =========================================================
+   DASHBOARD OVERVIEW ROW
+   Combines the personalised greeting with the employee’s
+   current weather and date summary.
+   ========================================================= *@
+<header class="dashboard-overview-row">
+
+    @* Personalised employee greeting. *@
+    <div class="dashboard-introduction">
+        <h1>Good morning, Nongcebo 👋</h1>
+
+        <p>Here’s what’s happening with your work today.</p>
+    </div>
+
+    @* =====================================================
+       WEATHER AND DATE SUMMARY
+       These values are visual placeholders for now. They can
+       later be connected to live weather and system dates.
+       ===================================================== *@
+    <div class="dashboard-day-summary">
+
+        @* Current weather summary. *@
+        <section class="dashboard-weather" aria-label="Current weather">
+
+            @* =========================================================
+   POLISHED PARTLY-CLOUDY WEATHER ICON
+   Uses layered gradients and subtle depth while preserving
+   the existing weather-summary dimensions and position.
+   ========================================================= *@
+<span class="dashboard-weather-icon" aria-hidden="true">
+    <svg viewBox="0 0 52 48">
+
+        @* Colour gradients used by the sun and cloud. *@
+        <defs>
+            <linearGradient
+                id="dashboardSunGradient"
+                x1="22"
+                y1="6"
+                x2="39"
+                y2="24"
+                gradientUnits="userSpaceOnUse">
+
+                <stop offset="0%" stop-color="#FFD84A" />
+                <stop offset="55%" stop-color="#FFB515" />
+                <stop offset="100%" stop-color="#F49300" />
+            </linearGradient>
+
+            <linearGradient
+                id="dashboardCloudGradient"
+                x1="14"
+                y1="20"
+                x2="39"
+                y2="43"
+                gradientUnits="userSpaceOnUse">
+
+                <stop offset="0%" stop-color="#FFFFFF" />
+                <stop offset="58%" stop-color="#EAF3FC" />
+                <stop offset="100%" stop-color="#C9DFF2" />
+            </linearGradient>
+        </defs>
+
+        @* Soft sunlight rays behind the cloud. *@
+        <g class="dashboard-weather-rays">
+            <path d="M34 3v5" />
+            <path d="m44 7-3.5 3.5" />
+            <path d="M48 17h-5" />
+            <path d="m24 7 3.5 3.5" />
+        </g>
+
+        @* Warm gradient sun partly hidden behind the cloud. *@
+        <circle
+            class="dashboard-weather-sun"
+            cx="34"
+            cy="17"
+            r="9" />
+
+        @* Soft blue shadow beneath the main cloud. *@
+        <path
+            class="dashboard-weather-cloud-shadow"
+            d="M12 39h29c4 0 7-3 7-6.8 0-3.2-2.2-5.9-5.3-6.6-.9-5.7-5.6-9.8-11.5-9.8-4.8 0-8.9 2.7-10.7 6.8C14.7 22.8 10 27.4 10 33c0 2.4.7 4.4 2 6Z" />
+
+        @* Main bright cloud shape. *@
+        <path
+            class="dashboard-weather-cloud"
+            d="M10 37h30.5c3.6 0 6.5-2.7 6.5-6.1 0-3-2.2-5.5-5.2-5.9-.8-5.2-5.1-9-10.5-9-4.5 0-8.4 2.6-10 6.5C15.9 22.8 12 27 12 32c0 1.9-.7 3.6-2 5Z" />
+    </svg>
+</span>
+
+            @* Weather temperature and condition. *@
+            <div class="dashboard-weather-copy">
+                <strong>18°C</strong>
+                <span>Partly cloudy</span>
+            </div>
+        </section>
+
+        @* Vertical separator between weather and date. *@
+        <span class="dashboard-summary-divider" aria-hidden="true"></span>
+
+        @* Current date summary. *@
+        <section class="dashboard-date" aria-label="Current date">
+            <strong>Tuesday</strong>
+
+            <time datetime="2026-08-04">
+                4 August 2026
+            </time>
+        </section>
+    </div>
+</header>
+
+    @* =========================================================
+   DASHBOARD CONTENT GRID
+   Establishes the wide primary workspace and the narrower
+   information column shown in the dashboard reference.
+   ========================================================= *@
+<div class="dashboard-content-grid">
+
+    @* =====================================================
+       PRIMARY DASHBOARD WORKSPACE
+       Contains attendance, tasks, links, articles, and FAQs.
+       ===================================================== *@
+    <section class="dashboard-primary-column">
+
+        @* Top dashboard row for attendance-related cards. *@
+        <div class="dashboard-top-card-row">
+
+           @* =========================================================
+   TIME AND ATTENDANCE CARD
+   Shows the employee’s current clocking status, today’s
+   worked hours, and the main attendance actions.
+   ========================================================= *@
+<section class="attendance-card">
+
+    @* Card heading and link to the full timesheet. *@
+    <header class="attendance-card-header">
+        <h2>Time &amp; Attendance</h2>
+
+        <a href="/attendance">
+            <span>View full timesheet</span>
+            <span aria-hidden="true">→</span>
+        </a>
+    </header>
+
+    @* Current time and today’s worked-hours progress. *@
+    <div class="attendance-card-content">
+
+        @* Employee’s current clocking status. *@
+        <div class="attendance-status">
+
+            @* Current clock time. Static for the visual build. *@
+            <div class="attendance-current-time">
+                <strong>09:15</strong>
+                <span>AM</span>
+            </div>
+
+            <p>You’re currently clocked in.</p>
+
+            @* Time at which the employee clocked in. *@
+            <div class="attendance-since">
+                <span class="attendance-status-dot" aria-hidden="true"></span>
+                <span>Since 09:00 AM</span>
+            </div>
+        </div>
+
+        @* Circular visual showing today’s completed hours. *@
+        <div
+            class="attendance-hours-progress"
+            role="img"
+            aria-label="One hour and fifteen minutes worked out of eight hours">
+
+            <div class="attendance-hours-copy">
+                <span>Today’s Hours</span>
+                <strong>01:15</strong>
+                <small>/ 08:00 hrs</small>
+            </div>
+        </div>
+    </div>
+
+    @* Clocking actions shown at the bottom of the card. *@
+    <div class="attendance-actions">
+
+        @* Main action for ending the employee’s work session. *@
+        <button class="attendance-clock-out" type="button">
+            <span class="attendance-action-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24">
+                    <circle cx="12" cy="13" r="8" />
+                    <path d="M12 9v4l3 2" />
+                    <path d="M9 2h6" />
+                    <path d="M12 2v3" />
+                </svg>
+            </span>
+
+            <span>Clock Out</span>
+        </button>
+
+        @* Secondary action for beginning a scheduled break. *@
+        <button class="attendance-start-break" type="button">
+            <span class="attendance-action-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24">
+                    <path d="M6 8h10v7a4 4 0 0 1-4 4h-2a4 4 0 0 1-4-4Z" />
+                    <path d="M16 10h2a2 2 0 0 1 0 4h-2" />
+                    <path d="M8 4c0 1 1 1 1 2" />
+                    <path d="M12 4c0 1 1 1 1 2" />
+                </svg>
+            </span>
+
+            <span>Start Break</span>
+        </button>
+    </div>
+</section>
+
+           @* =========================================================
+   WEEKLY ATTENDANCE CARD
+   Summarises the employee’s attendance across the current
+   working week using a compact five-day chart.
+   ========================================================= *@
+<section class="weekly-attendance-card">
+
+    @* Card heading and link to detailed attendance records. *@
+    <header class="weekly-attendance-header">
+        <h2>Attendance This Week</h2>
+
+        <a href="/attendance">View all</a>
+    </header>
+
+    @* Weekly attendance count and current status. *@
+    <div class="weekly-attendance-summary">
+
+       @* =========================================================
+   WEEKLY ATTENDANCE TOTAL
+   Keeps the attended-day count blue while displaying the
+   divider and total working days in a softer grey.
+   ========================================================= *@
+<div class="weekly-attendance-count">
+
+    @* Split the value so each part can use its own colour. *@
+    <strong class="weekly-attendance-value">
+        <span class="weekly-attendance-completed">4</span>
+        <span class="weekly-attendance-total">/5</span>
+    </strong>
+
+    <span>Days Present</span>
+</div>
+
+        @* Positive attendance-status label. *@
+        <span class="weekly-attendance-status">
+            On Track
+        </span>
+    </div>
+
+    @* =====================================================
+       FIVE-DAY ATTENDANCE CHART
+       Uses static design values for now. Real attendance
+       records will later determine each day’s state.
+       ===================================================== *@
+    <div
+        class="weekly-attendance-chart"
+        role="img"
+        aria-label="Present Monday through Thursday, with Friday remaining">
+
+        @* Monday attendance. *@
+        <div class="weekly-attendance-day">
+            <span class="weekly-day-marker is-complete" aria-hidden="true">
+                ✓
+            </span>
+
+            <span class="weekly-day-bar is-present bar-monday"></span>
+            <span class="weekly-day-label">Mon</span>
+        </div>
+
+        @* Tuesday attendance. *@
+        <div class="weekly-attendance-day">
+            <span class="weekly-day-marker is-complete" aria-hidden="true">
+                ✓
+            </span>
+
+            <span class="weekly-day-bar is-present bar-tuesday"></span>
+            <span class="weekly-day-label">Tue</span>
+        </div>
+
+        @* Wednesday attendance. *@
+        <div class="weekly-attendance-day">
+            <span class="weekly-day-marker is-complete" aria-hidden="true">
+                ✓
+            </span>
+
+            <span class="weekly-day-bar is-present bar-wednesday"></span>
+            <span class="weekly-day-label">Wed</span>
+        </div>
+
+        @* Thursday is highlighted as the current working day. *@
+        <div class="weekly-attendance-day">
+            <span class="weekly-day-marker is-complete" aria-hidden="true">
+                ✓
+            </span>
+
+            <span class="weekly-day-bar is-current bar-thursday"></span>
+            <span class="weekly-day-label">Thu</span>
+        </div>
+
+        @* Friday remains incomplete. *@
+        <div class="weekly-attendance-day">
+            <span class="weekly-day-marker is-pending" aria-hidden="true"></span>
+
+            <span class="weekly-day-bar is-pending bar-friday"></span>
+            <span class="weekly-day-label">Fri</span>
+        </div>
+    </div>
+</section>
+
+        </div>
+
+        @* Middle dashboard row for tasks and quick links. *@
+        <div class="dashboard-middle-card-row">
+
+            @* =========================================================
+   MY TASKS CARD
+   Shows the employee’s current actions, deadlines, and
+   priority levels from the dashboard reference.
+   ========================================================= *@
+<section class="tasks-card">
+
+    @* Card heading and link to the full task list. *@
+    <header class="tasks-card-header">
+        <h2>My Tasks</h2>
+
+        <a href="/tasks">View all</a>
+    </header>
+
+    @* Current employee task list. *@
+    <div class="tasks-list">
+
+        @* High-priority compliance-training task. *@
+        <article class="task-item">
+
+            <span class="task-icon task-icon-high" aria-hidden="true">
+                <svg viewBox="0 0 24 24">
+                    <circle cx="12" cy="12" r="8" />
+                    <circle cx="12" cy="12" r="3" />
+                    <path d="M12 2v3" />
+                </svg>
+            </span>
+
+            <div class="task-copy">
+                <strong>Complete Compliance Training</strong>
+                <span>Due by 20 May 2025</span>
+            </div>
+
+            <span class="task-priority task-priority-high">
+                High
+            </span>
+        </article>
+
+        @* Medium-priority data-policy task. *@
+        <article class="task-item">
+
+            <span class="task-icon task-icon-medium" aria-hidden="true">
+                <svg viewBox="0 0 24 24">
+                    <rect x="5" y="4" width="14" height="17" rx="2" />
+                    <path d="M9 4V2h6v2" />
+                    <path d="m9 13 2 2 4-4" />
+                </svg>
+            </span>
+
+            <div class="task-copy">
+                <strong>Acknowledge Updated Data Policy</strong>
+                <span>Due by 22 May 2025</span>
+            </div>
+
+            <span class="task-priority task-priority-medium">
+                Medium
+            </span>
+        </article>
+
+        @* Low-priority employee-profile task. *@
+        <article class="task-item">
+
+            <span class="task-icon task-icon-low" aria-hidden="true">
+                <svg viewBox="0 0 24 24">
+                    <circle cx="12" cy="8" r="3" />
+                    <path d="M6 20c0-4 2.2-7 6-7s6 3 6 7" />
+                </svg>
+            </span>
+
+            <div class="task-copy">
+                <strong>Update Your Profile Information</strong>
+                <span>Keep your details up to date</span>
+            </div>
+
+            <span class="task-priority task-priority-low">
+                Low
+            </span>
+        </article>
+
+        @* Low-priority payslip-review task. *@
+        <article class="task-item">
+
+            <span class="task-icon task-icon-low" aria-hidden="true">
+                <svg viewBox="0 0 24 24">
+                    <rect x="5" y="6" width="14" height="14" rx="2" />
+                    <path d="M9 6V4h6v2" />
+                    <path d="M8 11h8" />
+                    <path d="M8 15h6" />
+                </svg>
+            </span>
+
+            <div class="task-copy">
+                <strong>Review May 2025 Payslip</strong>
+                <span>Available in Payroll section</span>
+            </div>
+
+            <span class="task-priority task-priority-low">
+                Low
+            </span>
+        </article>
+    </div>
+
+    @* Link to the complete employee-task area. *@
+    <a class="tasks-card-footer-link" href="/tasks">
+        <span>Go to all tasks</span>
+        <span aria-hidden="true">→</span>
+    </a>
+</section>
+
+           @* =========================================================
+   QUICK LINKS CARD
+   Provides direct access to frequently used employee
+   self-service areas from the home dashboard.
+   ========================================================= *@
+<section class="quick-links-card">
+
+    @* Quick-links heading. *@
+    <header class="quick-links-header">
+        <h2>Quick Links</h2>
+    </header>
+
+    @* =====================================================
+       QUICK-LINK GRID
+       Displays eight employee services in two rows.
+       ===================================================== *@
+    <div class="quick-links-grid">
+
+        @* Request-leave shortcut. *@
+        <a class="quick-link-item" href="/requests">
+            <span class="quick-link-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24">
+                    <rect x="4" y="5" width="16" height="15" rx="2" />
+                    <path d="M8 3v4" />
+                    <path d="M16 3v4" />
+                    <path d="M4 9h16" />
+                    <path d="M8 13h2" />
+                    <path d="M14 13h2" />
+                    <path d="M8 17h2" />
+                </svg>
+            </span>
+
+            <span>Request Leave</span>
+        </a>
+
+        @* Payslip shortcut. *@
+        <a class="quick-link-item" href="/payroll">
+            <span class="quick-link-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24">
+                    <path d="M7 3h8l4 4v14H7Z" />
+                    <path d="M15 3v5h5" />
+                    <path d="M14.5 11.5c-.6-.5-1.3-.8-2.2-.8-1.2 0-2 .6-2 1.5 0 2.2 4.2 1.1 4.2 3.4 0 .9-.8 1.5-2.2 1.5-.9 0-1.8-.3-2.4-.9" />
+                    <path d="M12.3 9.5v8.8" />
+                </svg>
+            </span>
+
+            <span>My Payslip</span>
+        </a>
+
+        @* Employee-documents shortcut. *@
+        <a class="quick-link-item" href="/documents">
+            <span class="quick-link-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24">
+                    <path d="M3 7h7l2 2h9v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Z" />
+                    <path d="M3 7V5a2 2 0 0 1 2-2h5l2 2h7a2 2 0 0 1 2 2v2" />
+                </svg>
+            </span>
+
+            <span>My Documents</span>
+        </a>
+
+        @* Employee-benefits shortcut. *@
+        <a class="quick-link-item" href="/benefits">
+            <span class="quick-link-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24">
+                    <rect x="3" y="9" width="18" height="12" rx="1" />
+                    <path d="M12 9v12" />
+                    <path d="M3 13h18" />
+                    <path d="M12 9H8.5C6.5 9 5 8 5 6.5S6.2 4 7.8 4C10.2 4 12 9 12 9Z" />
+                    <path d="M12 9h3.5C17.5 9 19 8 19 6.5S17.8 4 16.2 4C13.8 4 12 9 12 9Z" />
+                </svg>
+            </span>
+
+            <span>Benefits</span>
+        </a>
+
+        @* Reimbursement shortcut. *@
+        <a class="quick-link-item" href="/requests">
+            <span class="quick-link-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24">
+                    <rect x="3" y="6" width="18" height="14" rx="2" />
+                    <path d="M3 10h18" />
+                    <path d="M8 16h3" />
+                    <path d="M15 14v4" />
+                    <path d="M13 16h4" />
+                </svg>
+            </span>
+
+            <span>Apply Reimbursement</span>
+        </a>
+
+        @* Company-directory shortcut. *@
+        <a class="quick-link-item" href="/directory">
+            <span class="quick-link-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24">
+                    <circle cx="8" cy="8" r="3" />
+                    <circle cx="17" cy="9" r="2.5" />
+                    <path d="M2.5 20c.3-4.4 2.1-6.5 5.5-6.5s5.2 2.1 5.5 6.5" />
+                    <path d="M14 14.5c3.7-.5 6.5 1.2 7.5 5.5" />
+                </svg>
+            </span>
+
+            <span>Company Directory</span>
+        </a>
+
+        @* Learning-portal shortcut. *@
+        <a class="quick-link-item" href="/learning">
+            <span class="quick-link-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24">
+                    <path d="m3 9 9-5 9 5-9 5Z" />
+                    <path d="M7 12.5V17c3 2 7 2 10 0v-4.5" />
+                    <path d="M21 9v6" />
+                </svg>
+            </span>
+
+            <span>Learning Portal</span>
+        </a>
+
+        @* Help-and-support shortcut. *@
+        <a class="quick-link-item" href="/support">
+            <span class="quick-link-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24">
+                    <path d="M4 13v-1a8 8 0 0 1 16 0v1" />
+                    <path d="M4 13h3v6H5a2 2 0 0 1-2-2v-2a2 2 0 0 1 1-2Z" />
+                    <path d="M20 13h-3v6h2a2 2 0 0 0 2-2v-2a2 2 0 0 0-1-2Z" />
+                    <path d="M17 19c-1 2-2.7 3-5 3" />
+                </svg>
+            </span>
+
+            <span>Help &amp; Support</span>
+        </a>
+    </div>
+
+    @* Link to the broader employee-services area. *@
+    <a class="quick-links-footer" href="/services">
+        <span>Explore all services</span>
+        <span aria-hidden="true">→</span>
+    </a>
+</section>
+
+        </div>
+
+        @* Bottom dashboard row for support content. *@
+        <div class="dashboard-bottom-card-row">
+
+            @* =========================================================
+   HELPFUL ARTICLES CARD
+   Gives employees quick access to practical self-service
+   guidance from the portal help centre.
+   ========================================================= *@
+<section class="helpful-articles-card">
+
+    @* Card heading and link to the complete article library. *@
+    <header class="helpful-articles-header">
+        <h2>Helpful Articles</h2>
+
+        <a href="/support">View all</a>
+    </header>
+
+    @* =====================================================
+       ARTICLE LIST
+       Displays three compact employee-help resources.
+       ===================================================== *@
+    <div class="helpful-articles-list">
+
+        @* Leave-request guidance article. *@
+        <a class="helpful-article-item" href="/support">
+
+            @* Article document icon. *@
+            <span class="helpful-article-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24">
+                    <rect x="5" y="3" width="14" height="18" rx="2" />
+                    <path d="M9 8h6" />
+                    <path d="M9 12h6" />
+                    <path d="M9 16h4" />
+                </svg>
+            </span>
+
+            @* Article title and description. *@
+            <span class="helpful-article-copy">
+                <strong>How to Request Time Off</strong>
+                <span>A step-by-step guide to submitting your leave request.</span>
+            </span>
+        </a>
+
+        @* Payslip-understanding article. *@
+        <a class="helpful-article-item" href="/support">
+
+            @* Article document icon. *@
+            <span class="helpful-article-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24">
+                    <rect x="5" y="3" width="14" height="18" rx="2" />
+                    <path d="M9 8h6" />
+                    <path d="M9 12h6" />
+                    <path d="M9 16h4" />
+                </svg>
+            </span>
+
+            @* Article title and description. *@
+            <span class="helpful-article-copy">
+                <strong>Understanding Your Payslip</strong>
+                <span>Breakdown of your payslip and important components.</span>
+            </span>
+        </a>
+
+        @* Benefits-enrolment article. *@
+        <a class="helpful-article-item" href="/support">
+
+            @* Article document icon. *@
+            <span class="helpful-article-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24">
+                    <rect x="5" y="3" width="14" height="18" rx="2" />
+                    <path d="M9 8h6" />
+                    <path d="M9 12h6" />
+                    <path d="M9 16h4" />
+                </svg>
+            </span>
+
+            @* Article title and description. *@
+            <span class="helpful-article-copy">
+                <strong>Benefits Enrollment Guide</strong>
+                <span>Learn how to enrol in company benefits and make the most of them.</span>
+            </span>
+        </a>
+    </div>
+
+    @* Link to the complete employee help centre. *@
+    <a class="helpful-articles-footer" href="/support">
+        <span>Visit Help Center</span>
+        <span aria-hidden="true">→</span>
+    </a>
+</section>
+
+            @* =========================================================
+   FREQUENTLY ASKED QUESTIONS CARD
+   Gives employees quick access to common portal questions.
+   The accordion controls are visual for now; opening and
+   closing behaviour will be implemented later.
+   ========================================================= *@
+<section class="faq-card">
+
+    @* Card heading and link to the complete help area. *@
+    <header class="faq-card-header">
+        <h2>Frequently Asked Questions</h2>
+
+        <a href="/support">View all</a>
+    </header>
+
+    @* =====================================================
+       FAQ QUESTION LIST
+       Displays four compact employee-help questions.
+       ===================================================== *@
+    <div class="faq-list">
+
+        @* Leave-application question. *@
+        <button class="faq-item" type="button">
+            <span class="faq-question-icon" aria-hidden="true">
+                ?
+            </span>
+
+            <span class="faq-question-text">
+                How do I apply for leave?
+            </span>
+
+            <span class="faq-chevron" aria-hidden="true">
+                <svg viewBox="0 0 24 24">
+                    <path d="m8 10 4 4 4-4" />
+                </svg>
+            </span>
+        </button>
+
+        @* Personal-information question. *@
+        <button class="faq-item" type="button">
+            <span class="faq-question-icon" aria-hidden="true">
+                ?
+            </span>
+
+            <span class="faq-question-text">
+                How can I update my personal information?
+            </span>
+
+            <span class="faq-chevron" aria-hidden="true">
+                <svg viewBox="0 0 24 24">
+                    <path d="m8 10 4 4 4-4" />
+                </svg>
+            </span>
+        </button>
+
+        @* Payslip-generation question. *@
+        <button class="faq-item" type="button">
+            <span class="faq-question-icon" aria-hidden="true">
+                ?
+            </span>
+
+            <span class="faq-question-text">
+                When are payslips generated?
+            </span>
+
+            <span class="faq-chevron" aria-hidden="true">
+                <svg viewBox="0 0 24 24">
+                    <path d="m8 10 4 4 4-4" />
+                </svg>
+            </span>
+        </button>
+
+        @* HR-contact question. *@
+        <button class="faq-item" type="button">
+            <span class="faq-question-icon" aria-hidden="true">
+                ?
+            </span>
+
+            <span class="faq-question-text">
+                How do I contact the HR team?
+            </span>
+
+            <span class="faq-chevron" aria-hidden="true">
+                <svg viewBox="0 0 24 24">
+                    <path d="m8 10 4 4 4-4" />
+                </svg>
+            </span>
+        </button>
+    </div>
+</section>
+
+
+        </div>
+    </section>
+
+    @* =====================================================
+       DASHBOARD INFORMATION COLUMN
+       Contains announcements, events, and employee help.
+       ===================================================== *@
+    <aside class="dashboard-information-column">
+
+       @* =========================================================
+   LATEST ANNOUNCEMENTS CARD
+   Shows recent company notices, operational updates, and
+   employee programmes in the dashboard information column.
+   ========================================================= *@
+<section class="announcements-card">
+
+    @* Card heading and link to the complete announcement list. *@
+    <header class="announcements-card-header">
+        <h2>Latest Announcements</h2>
+
+        <a href="/announcements">View all</a>
+    </header>
+
+    @* =====================================================
+       ANNOUNCEMENT LIST
+       Displays the three latest employee-facing notices.
+       ===================================================== *@
+    <div class="announcements-list">
+
+        @* Updated leave-policy announcement. *@
+        <article class="announcement-item">
+
+            @* Purple policy-document icon. *@
+            <span class="announcement-icon announcement-icon-policy" aria-hidden="true">
+                <svg viewBox="0 0 24 24">
+                    <rect x="5" y="4" width="14" height="17" rx="2" />
+                    <path d="M9 4V2h6v2" />
+                    <path d="M9 10h6" />
+                    <path d="M9 14h6" />
+                    <path d="M9 18h4" />
+                </svg>
+            </span>
+
+            @* Announcement wording and publication date. *@
+            <div class="announcement-copy">
+                <strong>Updated Leave Policy</strong>
+
+                <p>
+                    Please review the updated leave policy effective
+                    1 June 2025.
+                </p>
+
+                <time datetime="2025-05-14">14 May 2025</time>
+            </div>
+        </article>
+
+        @* Scheduled system-maintenance announcement. *@
+        <article class="announcement-item">
+
+            @* Orange maintenance icon. *@
+            <span class="announcement-icon announcement-icon-maintenance" aria-hidden="true">
+                <svg viewBox="0 0 24 24">
+                    <path d="M14.5 6.5a4.5 4.5 0 0 0-6 5.8L3 17.8 6.2 21l5.5-5.5a4.5 4.5 0 0 0 5.8-6l-2.8 2.8-3-3Z" />
+                </svg>
+            </span>
+
+            @* Announcement wording and publication date. *@
+            <div class="announcement-copy">
+                <strong>System Maintenance</strong>
+
+                <p>
+                    HR system will be unavailable on 18 May 2025
+                    from 01:00 AM to 05:00 AM.
+                </p>
+
+                <time datetime="2025-05-13">13 May 2025</time>
+            </div>
+        </article>
+
+        @* Employee wellness-programme announcement. *@
+        <article class="announcement-item">
+
+            @* Green wellness icon. *@
+            <span class="announcement-icon announcement-icon-wellness" aria-hidden="true">
+                <svg viewBox="0 0 24 24">
+                    <path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.7A4 4 0 0 1 19 10c0 5.6-7 10-7 10Z" />
+                    <path d="M7.5 12h2l1.2-2.4 2.1 5 1.2-2.6h2.5" />
+                </svg>
+            </span>
+
+            @* Announcement wording and publication date. *@
+            <div class="announcement-copy">
+                <strong>Wellness Program</strong>
+
+                <p>
+                    Join our new 6-week wellness challenge starting
+                    26 May!
+                </p>
+
+                <time datetime="2025-05-12">12 May 2025</time>
+            </div>
+        </article>
+    </div>
+
+    @* Link to the complete company-announcement area. *@
+    <a class="announcements-card-footer" href="/announcements">
+        <span>View all announcements</span>
+        <span aria-hidden="true">→</span>
+    </a>
+</section>
+
+      @* =========================================================
+   UPCOMING EVENTS CARD
+   Shows the employee’s next company meetings, town halls,
+   and wellbeing events.
+   ========================================================= *@
+<section class="upcoming-events-card">
+
+    @* Card heading and link to the complete company calendar. *@
+    <header class="upcoming-events-header">
+        <h2>Upcoming Events</h2>
+
+        <a href="/events">View calendar</a>
+    </header>
+
+    @* =====================================================
+       UPCOMING EVENT LIST
+       Displays the next three employee-facing events.
+       ===================================================== *@
+    <div class="upcoming-events-list">
+
+        @* Team stand-up event. *@
+        <article class="upcoming-event-item">
+
+            @* Compact calendar-date tile. *@
+            <time class="event-date-card" datetime="2026-08-06">
+                <span>AUG</span>
+                <strong>06</strong>
+            </time>
+
+            @* Event details. *@
+            <div class="event-details">
+                <div class="event-title-row">
+                    <span class="event-status-dot event-status-green" aria-hidden="true"></span>
+                    <strong>Team Stand-up</strong>
+                </div>
+
+                <span>10:00 AM – 10:30 AM</span>
+                <small>Zoom Meeting</small>
+            </div>
+        </article>
+
+        @* HR town-hall event. *@
+        <article class="upcoming-event-item">
+
+            @* Compact calendar-date tile. *@
+            <time class="event-date-card" datetime="2026-08-12">
+                <span>AUG</span>
+                <strong>12</strong>
+            </time>
+
+            @* Event details. *@
+            <div class="event-details">
+                <div class="event-title-row">
+                    <span class="event-status-dot event-status-blue" aria-hidden="true"></span>
+                    <strong>HR Town Hall</strong>
+                </div>
+
+                <span>11:00 AM – 12:00 PM</span>
+                <small>Main Auditorium</small>
+            </div>
+        </article>
+
+        @* Employee-wellness webinar. *@
+        <article class="upcoming-event-item">
+
+            @* Compact calendar-date tile. *@
+            <time class="event-date-card" datetime="2026-08-19">
+                <span>AUG</span>
+                <strong>19</strong>
+            </time>
+
+            @* Event details. *@
+            <div class="event-details">
+                <div class="event-title-row">
+                    <span class="event-status-dot event-status-purple" aria-hidden="true"></span>
+                    <strong>Wellness Webinar</strong>
+                </div>
+
+                <span>03:00 PM – 04:00 PM</span>
+                <small>Virtual Event</small>
+            </div>
+        </article>
+    </div>
+</section>
+
+       @* =========================================================
+   EMPLOYEE HELP CARD
+   Gives employees quick access to the HR support assistant.
+   The temporary inline robot can later be replaced with a
+   dedicated PNG, WebP, or SVG image.
+   ========================================================= *@
+<section class="dashboard-help-card">
+
+    @* Help-card wording and primary action. *@
+    <div class="dashboard-help-copy">
+        <h2>Need help?</h2>
+
+        <p>
+            Get quick answers or connect with the HR support team.
+        </p>
+
+        @* Visual button for opening the future HR assistant. *@
+        <button class="dashboard-help-button" type="button">
+            Chat with HR Bot
+        </button>
+    </div>
+
+    @* =====================================================
+       TEMPORARY HR ASSISTANT ILLUSTRATION
+       This SVG occupies the final image position and can be
+       swapped later without rebuilding the card.
+       ===================================================== *@
+    <div class="dashboard-help-robot" aria-hidden="true">
+        <svg viewBox="0 0 150 170">
+
+            @* Robot antenna. *@
+            <path
+                class="help-robot-antenna"
+                d="M75 19V8" />
+
+            <circle
+                class="help-robot-antenna-tip"
+                cx="75"
+                cy="7"
+                r="5" />
+
+            @* Robot head and dark face screen. *@
+            <rect
+                class="help-robot-head"
+                x="29"
+                y="22"
+                width="92"
+                height="67"
+                rx="29" />
+
+            <rect
+                class="help-robot-face"
+                x="40"
+                y="34"
+                width="70"
+                height="40"
+                rx="18" />
+
+            @* Friendly robot eyes. *@
+            <circle
+                class="help-robot-eye"
+                cx="61"
+                cy="53"
+                r="5" />
+
+            <circle
+                class="help-robot-eye"
+                cx="89"
+                cy="53"
+                r="5" />
+
+            @* Robot smile. *@
+            <path
+                class="help-robot-smile"
+                d="M65 64c6 5 14 5 20 0" />
+
+            @* Robot neck and body. *@
+            <rect
+                class="help-robot-neck"
+                x="66"
+                y="85"
+                width="18"
+                height="13"
+                rx="6" />
+
+            <rect
+                class="help-robot-body"
+                x="42"
+                y="94"
+                width="66"
+                height="59"
+                rx="23" />
+
+            @* Blue chest screen. *@
+            <rect
+                class="help-robot-chest"
+                x="57"
+                y="109"
+                width="36"
+                height="27"
+                rx="8" />
+
+            @* Robot arms. *@
+            <path
+                class="help-robot-arm"
+                d="M44 106c-13 3-20 12-21 25" />
+
+            <path
+                class="help-robot-arm"
+                d="M106 106c13 3 20 12 21 25" />
+
+            @* Robot hands. *@
+            <circle
+                class="help-robot-hand"
+                cx="22"
+                cy="134"
+                r="7" />
+
+            <circle
+                class="help-robot-hand"
+                cx="128"
+                cy="134"
+                r="7" />
+        </svg>
+    </div>
+</section>
+
+    </aside>
+</div>
+
+</section>

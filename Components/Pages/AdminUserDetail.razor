@@ -1,0 +1,385 @@
+@* Administrator controls for one employee account. *@
+@page "/admin/users/{UserId}"
+@layout EmployeeLayout
+@rendermode InteractiveServer
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Identity
+@using SecureEmployeePortal.Data
+@using SecureEmployeePortal.Services
+@attribute [Authorize(Roles = "Administrator")]
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject UserManager<ApplicationUser> UserManager
+@inject RoleManager<IdentityRole> RoleManager
+@inject SecureEmployeePortal.Services.PortalActivityService ActivityService
+@inject SecureEmployeePortal.Services.PortalAuthorizationService AuthorizationService
+
+<PageTitle>User Detail | Secure Employee Portal</PageTitle>
+
+<section class="portal-page">
+    <header class="portal-page-header">
+        <div>
+            <p class="eyebrow">Administrator only</p>
+            <h1>Employee Account</h1>
+            <p>Inspect identity, change access state and manage role assignment with auditable actions.</p>
+        </div>
+        <a class="portal-secondary-link" href="/admin/users">Back to users</a>
+    </header>
+
+    @if (!Loaded)
+    {
+        <div class="portal-state-card">Loading employee account…</div>
+    }
+    else if (TargetUser is null)
+    {
+        <div class="portal-state-card">The requested employee account could not be found.</div>
+    }
+    else
+    {
+        @if (!string.IsNullOrWhiteSpace(StatusMessage))
+        {
+            <div class="@(ActionSucceeded ? "portal-success-message" : "portal-error-message")" role="status">@StatusMessage</div>
+        }
+
+        <div class="portal-grid portal-grid-two">
+            <article class="portal-card">
+                <p class="eyebrow">Identity</p>
+                <h2>@TargetUser.FullName</h2>
+                <dl class="portal-detail-list">
+                    <div><dt>Email</dt><dd>@TargetUser.Email</dd></div>
+                    <div><dt>Employee number</dt><dd>@TargetUser.EmployeeNumber</dd></div>
+                    <div><dt>Department</dt><dd>@TargetUser.Department</dd></div>
+                    <div><dt>Job title</dt><dd>@TargetUser.JobTitle</dd></div>
+                    <div><dt>Status</dt><dd><span class="portal-status-badge">@TargetUser.AccountStatus</span></dd></div>
+                    <div><dt>Role</dt><dd>@CurrentRole</dd></div>
+                    <div><dt>Last sign-in</dt><dd>@FormatDate(TargetUser.LastLoginAt)</dd></div>
+                    <div><dt>Failed sign-ins</dt><dd>@TargetUser.AccessFailedCount</dd></div>
+                </dl>
+            </article>
+
+            <article class="portal-card">
+                <p class="eyebrow">Protected controls</p>
+                <h2>Account administration</h2>
+
+                @if (IsSelf)
+                {
+                    <div class="portal-warning-message">To prevent accidental administrator lockout, you cannot suspend, disable or change the role of the account you are currently using.</div>
+                }
+
+                <div class="admin-action-stack">
+                    <button class="portal-primary-button" type="button" disabled="@(IsSelf || IsBusy || HasPendingAction || TargetUser.AccountStatus == AccountStatus.Active)" @onclick="() => RequestStatusChange(AccountStatus.Active)">
+                        @(TargetUser.AccountStatus == AccountStatus.Active ? "Account active" : "Activate / restore account")
+                    </button>
+                    <button class="portal-danger-button" type="button" disabled="@(IsSelf || IsBusy || HasPendingAction || TargetUser.AccountStatus == AccountStatus.Suspended)" @onclick="() => RequestStatusChange(AccountStatus.Suspended)">Suspend account</button>
+                    <button class="portal-secondary-button" type="button" disabled="@(IsSelf || IsBusy || HasPendingAction || TargetUser.AccountStatus == AccountStatus.Disabled)" @onclick="() => RequestStatusChange(AccountStatus.Disabled)">Disable account</button>
+
+                    <label>
+                        <span>Assigned role</span>
+                        <select @bind="SelectedRole" disabled="@(IsSelf || IsBusy || HasPendingAction)">
+                            @foreach (var role in Roles)
+                            {
+                                <option value="@role">@role</option>
+                            }
+                        </select>
+                    </label>
+                    <button class="portal-secondary-button" type="button" disabled="@(IsSelf || IsBusy || HasPendingAction || SelectedRole == CurrentRole)" @onclick="RequestRoleChange">Save role</button>
+                </div>
+
+                @if (HasPendingAction)
+                {
+                    <div class="portal-confirmation-panel" role="alert">
+                        <strong>Confirm security change</strong>
+                        <p>@PendingActionDescription</p>
+                        <div class="portal-header-actions">
+                            <button class="portal-secondary-button" type="button" disabled="@IsBusy" @onclick="CancelPendingAction">Cancel</button>
+                            <button class="portal-danger-button" type="button" disabled="@IsBusy" @onclick="ConfirmPendingActionAsync">@(IsBusy ? "Applying…" : "Confirm change")</button>
+                        </div>
+                    </div>
+                }
+            </article>
+        </div>
+    }
+</section>
+
+@code {
+    [Parameter] public string UserId { get; set; } = string.Empty;
+
+    private ApplicationUser? TargetUser { get; set; }
+    private ApplicationUser? ActorUser { get; set; }
+    private string CurrentRole { get; set; } = "Employee";
+    private string SelectedRole { get; set; } = "Employee";
+    private List<string> Roles { get; set; } = [];
+    private string? StatusMessage { get; set; }
+    private bool ActionSucceeded { get; set; }
+    private bool Loaded { get; set; }
+    private bool IsBusy { get; set; }
+    private AccountStatus? PendingStatus { get; set; }
+    private string? PendingRole { get; set; }
+    private bool HasPendingAction => PendingStatus.HasValue || !string.IsNullOrWhiteSpace(PendingRole);
+    private string PendingActionDescription => PendingStatus.HasValue
+        ? $"Change {TargetUser?.FullName}'s account status from {TargetUser?.AccountStatus} to {PendingStatus.Value}?"
+        : $"Change {TargetUser?.FullName}'s role from {CurrentRole} to {PendingRole}?";
+    private bool IsSelf => TargetUser is not null && !AccountAccessRules.MayAdministratorChangeTarget(ActorUser?.Id, TargetUser.Id);
+
+    protected override async Task OnParametersSetAsync()
+    {
+        Loaded = false;
+        StatusMessage = null;
+        CancelPendingAction();
+
+        var state = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        ActorUser = await UserManager.GetUserAsync(state.User);
+        TargetUser = await UserManager.FindByIdAsync(UserId);
+        // Do not surface arbitrary Identity roles that may exist outside this portal's
+        // documented Employee / Manager / Administrator permission model.
+        Roles = PortalSeedService.Roles.ToList();
+
+        if (TargetUser is not null)
+        {
+            var assignedRoles = await UserManager.GetRolesAsync(TargetUser);
+            var portalRoles = assignedRoles.Where(AccountAccessRules.IsKnownRole).ToArray();
+
+            // Make legacy/corrupt role state visible and recoverable instead of silently
+            // treating an unknown Identity role as a valid portal role. Selecting any
+            // documented role will normalize the account back to the one-role model.
+            CurrentRole = portalRoles.Length switch
+            {
+                0 => "No portal role",
+                1 => portalRoles[0],
+                _ => string.Join(", ", portalRoles)
+            };
+            SelectedRole = portalRoles.Length == 1 ? portalRoles[0] : "Employee";
+        }
+
+        Loaded = true;
+    }
+
+    private void RequestStatusChange(AccountStatus newStatus)
+    {
+        if (TargetUser is null || IsSelf || IsBusy || TargetUser.AccountStatus == newStatus)
+        {
+            return;
+        }
+
+        PendingRole = null;
+        PendingStatus = newStatus;
+    }
+
+    private void RequestRoleChange()
+    {
+        if (TargetUser is null || IsSelf || IsBusy || string.IsNullOrWhiteSpace(SelectedRole) || SelectedRole == CurrentRole)
+        {
+            return;
+        }
+
+        PendingStatus = null;
+        PendingRole = SelectedRole;
+    }
+
+    private void CancelPendingAction()
+    {
+        PendingStatus = null;
+        PendingRole = null;
+    }
+
+    private async Task ConfirmPendingActionAsync()
+    {
+        if (PendingStatus is { } status)
+        {
+            await ChangeStatusAsync(status);
+        }
+        else if (!string.IsNullOrWhiteSpace(PendingRole))
+        {
+            await ApplyRoleChangeAsync(PendingRole);
+        }
+
+        CancelPendingAction();
+    }
+
+    private async Task ChangeStatusAsync(AccountStatus newStatus)
+    {
+        if (TargetUser is null || ActorUser is null || IsSelf || IsBusy)
+        {
+            return;
+        }
+
+        IsBusy = true;
+        StatusMessage = null;
+        try
+        {
+            if (!await AuthorizationService.IsActiveAdministratorAsync(ActorUser.Id))
+            {
+                ActionSucceeded = false;
+                StatusMessage = "Your administrator access is no longer active. Sign in again before changing account status.";
+                return;
+            }
+
+            // Invalidate existing sessions before changing the protected account state.
+            // If the stamp cannot be changed, abort rather than applying a status change
+            // while an old authenticated session may still carry stale access.
+            var stampResult = await UserManager.UpdateSecurityStampAsync(TargetUser);
+            if (!stampResult.Succeeded)
+            {
+                ActionSucceeded = false;
+                StatusMessage = "The account status could not be changed safely because existing sessions could not be invalidated.";
+                await ActivityService.RecordAuditAsync(
+                    ActorUser.Id,
+                    TargetUser.Id,
+                    "AccountStatusChanged",
+                    TargetUser.AccountStatus.ToString(),
+                    newStatus.ToString(),
+                    false);
+                return;
+            }
+
+            var previous = TargetUser.AccountStatus;
+            TargetUser.AccountStatus = newStatus;
+            var result = await UserManager.UpdateAsync(TargetUser);
+
+            ActionSucceeded = result.Succeeded;
+            StatusMessage = result.Succeeded
+                ? $"Account status changed to {newStatus}."
+                : "The account status could not be changed. No access change was applied.";
+
+            await ActivityService.RecordAuditAsync(
+                ActorUser.Id,
+                TargetUser.Id,
+                "AccountStatusChanged",
+                previous.ToString(),
+                newStatus.ToString(),
+                result.Succeeded);
+
+            if (result.Succeeded)
+            {
+                await ActivityService.RecordSecurityEventAsync(
+                    TargetUser.Id,
+                    "AccountStatusChanged",
+                    true,
+                    $"Account status changed from {previous} to {newStatus} by an administrator.");
+            }
+            else
+            {
+                TargetUser.AccountStatus = previous;
+            }
+        }
+        finally
+        {
+            IsBusy = false;
+        }
+    }
+
+    private async Task ApplyRoleChangeAsync(string requestedRole)
+    {
+        if (TargetUser is null || ActorUser is null || IsSelf || IsBusy || string.IsNullOrWhiteSpace(requestedRole))
+        {
+            return;
+        }
+
+        if (!AccountAccessRules.IsKnownRole(requestedRole) || !await RoleManager.RoleExistsAsync(requestedRole))
+        {
+            ActionSucceeded = false;
+            StatusMessage = "The selected role is not available.";
+            return;
+        }
+
+        IsBusy = true;
+        StatusMessage = null;
+        try
+        {
+            if (!await AuthorizationService.IsActiveAdministratorAsync(ActorUser.Id))
+            {
+                ActionSucceeded = false;
+                StatusMessage = "Your administrator access is no longer active. Sign in again before changing roles.";
+                return;
+            }
+
+            var previousRoles = await UserManager.GetRolesAsync(TargetUser);
+
+            // Role changes alter authorisation claims. Invalidate existing sessions first;
+            // if that cannot be done, do not change the persisted role assignment.
+            var stampResult = await UserManager.UpdateSecurityStampAsync(TargetUser);
+            if (!stampResult.Succeeded)
+            {
+                ActionSucceeded = false;
+                SelectedRole = CurrentRole;
+                StatusMessage = "The role could not be changed safely because existing sessions could not be invalidated.";
+                await ActivityService.RecordAuditAsync(
+                    ActorUser.Id,
+                    TargetUser.Id,
+                    "RoleChanged",
+                    string.Join(", ", previousRoles),
+                    requestedRole,
+                    false);
+                return;
+            }
+
+            // Add the desired role before removing old roles so a partial failure cannot
+            // accidentally leave the employee with no assigned role at all.
+            if (!previousRoles.Contains(requestedRole, StringComparer.Ordinal))
+            {
+                var addResult = await UserManager.AddToRoleAsync(TargetUser, requestedRole);
+                if (!addResult.Succeeded)
+                {
+                    ActionSucceeded = false;
+                    StatusMessage = "The requested role could not be assigned. The account's previous access was preserved.";
+                    await ActivityService.RecordAuditAsync(
+                        ActorUser.Id,
+                        TargetUser.Id,
+                        "RoleChanged",
+                        string.Join(", ", previousRoles),
+                        requestedRole,
+                        false);
+                    return;
+                }
+            }
+
+            var rolesToRemove = previousRoles.Where(role => !string.Equals(role, requestedRole, StringComparison.Ordinal)).ToArray();
+            if (rolesToRemove.Length > 0)
+            {
+                var removeResult = await UserManager.RemoveFromRolesAsync(TargetUser, rolesToRemove);
+                if (!removeResult.Succeeded)
+                {
+                    // Avoid leaving a partially elevated account if the old role could not be removed.
+                    if (!previousRoles.Contains(requestedRole, StringComparer.Ordinal))
+                    {
+                        await UserManager.RemoveFromRoleAsync(TargetUser, requestedRole);
+                    }
+
+                    ActionSucceeded = false;
+                    StatusMessage = "The role change could not be completed safely. The account was returned to its previous access where possible.";
+                    await ActivityService.RecordAuditAsync(
+                        ActorUser.Id,
+                        TargetUser.Id,
+                        "RoleChanged",
+                        string.Join(", ", previousRoles),
+                        requestedRole,
+                        false);
+                    return;
+                }
+            }
+
+            CurrentRole = requestedRole;
+            SelectedRole = requestedRole;
+            ActionSucceeded = true;
+            StatusMessage = $"Role changed to {requestedRole}.";
+            await ActivityService.RecordAuditAsync(
+                ActorUser.Id,
+                TargetUser.Id,
+                "RoleChanged",
+                string.Join(", ", previousRoles),
+                requestedRole,
+                true);
+            await ActivityService.RecordSecurityEventAsync(
+                TargetUser.Id,
+                "RoleChanged",
+                true,
+                $"Account role changed to {requestedRole} by an administrator.");
+        }
+        finally
+        {
+            IsBusy = false;
+        }
+    }
+
+    private static string FormatDate(DateTimeOffset? value) =>
+        value?.ToLocalTime().ToString("dd MMM yyyy, HH:mm") ?? "Never";
+}

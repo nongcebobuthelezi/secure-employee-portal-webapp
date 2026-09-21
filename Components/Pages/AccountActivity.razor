@@ -1,0 +1,120 @@
+@* Employee-safe view of security and administrative activity linked to the current account. *@
+@page "/account-activity"
+@layout EmployeeLayout
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Identity
+@using Microsoft.EntityFrameworkCore
+@using SecureEmployeePortal.Data
+@attribute [Authorize]
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject UserManager<ApplicationUser> UserManager
+@inject IDbContextFactory<ApplicationDbContext> DbFactory
+
+<PageTitle>Account Activity | Secure Employee Portal</PageTitle>
+
+<section class="portal-page">
+    <header class="portal-page-header">
+        <div>
+            <p class="eyebrow">Account transparency</p>
+            <h1>Account Activity</h1>
+            <p>Review recent security events and account changes connected to your own employee identity.</p>
+        </div>
+        <a class="portal-secondary-link" href="/security">My security</a>
+    </header>
+
+    <article class="portal-card">
+        <div class="portal-card-heading">
+            <div><p class="eyebrow">Most recent first</p><h2>Activity timeline</h2></div>
+            <span class="portal-status-badge">@Items.Count events</span>
+        </div>
+
+        @if (!Loaded)
+        {
+            <div class="portal-state-card">Loading account activity…</div>
+        }
+        else if (Items.Count == 0)
+        {
+            <div class="portal-empty-state">No account activity has been recorded yet.</div>
+        }
+        else
+        {
+            <ul class="portal-activity-list account-activity-feed">
+                @foreach (var item in Items)
+                {
+                    <li>
+                        <span class="activity-dot @(item.Succeeded ? "ok" : "bad")" aria-hidden="true"></span>
+                        <div>
+                            <strong>@item.Title</strong>
+                            <span>@item.Description</span>
+                            <small>@item.OccurredAt.ToLocalTime().ToString("dd MMM yyyy, HH:mm")</small>
+                        </div>
+                    </li>
+                }
+            </ul>
+        }
+    </article>
+</section>
+
+@code {
+    private List<ActivityItem> Items { get; set; } = [];
+    private bool Loaded { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        var state = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        var user = await UserManager.GetUserAsync(state.User);
+        if (user is null)
+        {
+            Loaded = true;
+            return;
+        }
+
+        await using var db = await DbFactory.CreateDbContextAsync();
+        var security = await db.SecurityEvents
+            .Where(item => item.UserId == user.Id)
+            .OrderByDescending(item => item.OccurredAt)
+            .Take(30)
+            .AsNoTracking()
+            .ToListAsync();
+
+        // This is an employee account-transparency view, not an administrator work log.
+        // Only include audit records that actually affected this employee identity. An
+        // administrator's actions on other employees belong in the administrator audit log.
+        var audits = await db.AuditLogs
+            .Where(item => item.TargetUserId == user.Id)
+            .OrderByDescending(item => item.OccurredAt)
+            .Take(30)
+            .AsNoTracking()
+            .ToListAsync();
+
+        Items = security.Select(item => new ActivityItem(
+                item.EventType,
+                item.Description,
+                item.Succeeded,
+                item.OccurredAt))
+            .Concat(audits.Select(item => new ActivityItem(
+                HumanizeAction(item.ActionType),
+                item.ActorUserId == user.Id && item.TargetUserId == user.Id
+                    ? "You changed permitted information on your account."
+                    : "An authorised account-management action affected your employee account.",
+                item.Succeeded,
+                item.OccurredAt)))
+            .OrderByDescending(item => item.OccurredAt)
+            .Take(40)
+            .ToList();
+
+        Loaded = true;
+    }
+
+    private static string HumanizeAction(string value) => value switch
+    {
+        "ProfileUpdated" => "Profile updated",
+        "AccountStatusChanged" => "Account status changed",
+        "RoleChanged" => "Role changed",
+        "AccountCreated" => "Account created",
+        "AccessRequestReviewed" => "Access request reviewed",
+        _ => value
+    };
+
+    private sealed record ActivityItem(string Title, string Description, bool Succeeded, DateTimeOffset OccurredAt);
+}

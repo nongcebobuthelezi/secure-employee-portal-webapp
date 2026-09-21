@@ -1,0 +1,563 @@
+﻿@* Registration page route and shared authentication layout. *@
+@page "/register"
+@layout AuthLayout
+
+@* Imports the Identity service used to create employee accounts. *@
+@using Microsoft.AspNetCore.Identity
+
+@* Imports the portal's customised employee-account class. *@
+@using SecureEmployeePortal.Data
+
+@* Provides the service that creates and validates Identity users. *@
+@inject UserManager<ApplicationUser> UserManager
+
+@* Provides navigation after successful account creation. *@
+@inject NavigationManager NavigationManager
+
+
+@* Browser-tab title for the account-creation page. *@
+<PageTitle>Create Account | Secure Employee Portal</PageTitle>
+
+<main class="login-shell">
+    <section class="login-visual-panel">
+        <div class="brand-row">
+<div class="brand-icon" aria-hidden="true">
+    <svg viewBox="0 0 72 78">
+        <defs>
+            <linearGradient
+                id="brandShieldStroke"
+                x1="36"
+                y1="5"
+                x2="36"
+                y2="73"
+                gradientUnits="userSpaceOnUse">
+
+                <stop offset="0%" stop-color="#5EE4EA" />
+                <stop offset="48%" stop-color="#3CB6E8" />
+                <stop offset="100%" stop-color="#3269E5" />
+            </linearGradient>
+        </defs>
+
+        <path
+            class="brand-shield-depth"
+            d="M36 6
+               L61 15
+               V34
+               C61 51 51 65 36 72
+               C21 65 11 51 11 34
+               V15
+               Z" />
+
+        <path
+            class="brand-shield-outline"
+            d="M36 4
+               L61 13
+               V32
+               C61 49 51 63 36 70
+               C21 63 11 49 11 32
+               V13
+               Z" />
+
+        <circle
+            class="brand-person-head"
+            cx="36"
+            cy="27"
+            r="7.5" />
+
+        <path
+            class="brand-person-body"
+            d="M22 53
+               C22 43.5 28.2 37 36 37
+               C43.8 37 50 43.5 50 53
+               C50 55.2 48.2 57 46 57
+               H26
+               C23.8 57 22 55.2 22 53
+               Z" />
+    </svg>
+</div>
+            <div>
+                <h1 class="brand-name">
+                    Secure <span>Employee Portal</span>
+                </h1>
+
+                <p class="brand-tagline">
+                    Secure Access. Trusted People. Stronger Organization.
+                </p>
+            </div>
+        </div>
+
+      <div class="visual-content">
+    <div class="visual-intro-row">
+        <div class="dot-grid" aria-hidden="true"></div>
+
+        <div class="visual-copy">
+    @* Registration-specific heading. *@
+    <h2>Create your secure employee account</h2>
+
+    @* Registration-specific supporting description. *@
+    <p class="visual-description">
+        Join your organization’s secure network and access the
+        tools, resources, and support you need to do your best work.
+    </p>
+</div>
+
+    </div>
+
+    <div class="illustration-wrapper">
+        <img
+src="images/security-illustration-new.png"
+            alt="Laptop displaying an employee profile beside a security shield and plant" />
+    </div>
+</div>
+
+        <div class="feature-row">
+    <div class="feature-item">
+        <div class="feature-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24">
+                <rect x="5" y="10" width="14" height="10" rx="2" />
+                <path d="M8 10V7a4 4 0 0 1 8 0v3" />
+            </svg>
+        </div>
+
+        <div class="feature-copy">
+            <strong>Enterprise Security</strong>
+            <span>State-of-the-art encryption keeps your data protected</span>
+        </div>
+    </div>
+
+    <div class="feature-item">
+        <div class="feature-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24">
+                <circle cx="12" cy="8" r="4" />
+                <path d="M4 21a8 8 0 0 1 16 0" />
+            </svg>
+        </div>
+
+        <div class="feature-copy">
+            <strong>Trusted Access</strong>
+            <span>Verified employees, secure connections</span>
+        </div>
+    </div>
+
+    <div class="feature-item">
+        <div class="feature-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24">
+                <path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9" />
+                <path d="M10 21h4" />
+            </svg>
+        </div>
+
+        <div class="feature-copy">
+            <strong>Stay Informed</strong>
+            <span>Get important updates and announcements</span>
+        </div>
+    </div>
+</div>
+
+    </section>
+
+    <section class="login-form-panel">
+        <div class="form-panel-inner">
+            @* =========================================================
+   ENTERPRISE SECURE BADGE
+   Adds the small outlined security icon shown in the reference.
+   ========================================================= *@
+<div class="security-badge">
+    @* Small outlined shield icon positioned before the badge text. *@
+    <span class="security-badge-icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24">
+            <path d="M12 3 5 6v5c0 4.6 2.8 8.8 7 10 4.2-1.2 7-5.4 7-10V6l-7-3Z" />
+            <path d="m9.5 11.5 1.7 1.5 3.3-3.5" />
+        </svg>
+    </span>
+
+    @* Existing badge wording remains unchanged. *@
+    <span>Enterprise Secure</span>
+</div>
+
+            <div class="form-heading">
+                <h2>Create your account</h2>
+                <p>Fill in your details to get started.</p>
+            </div>
+
+            @* =========================================================
+   REGISTRATION FORM
+   Adds the five account-creation fields while reusing the
+   approved field, icon, and button styling from the login page.
+   ========================================================= *@
+@* Connects valid Registration submissions to the account-creation method. *@
+<EditForm
+    Model="Input"
+    FormName="register"
+    OnValidSubmit="RegisterUserAsync"
+    class="login-form registration-form">
+
+    @* Activates the validation rules declared on RegisterInputModel. *@
+    <DataAnnotationsValidator />
+
+    @* First and last name share the first form row. *@
+    <div class="registration-field-row">
+
+        @* First-name field bound to the Registration input model. *@
+<div class="form-group">
+    <label for="first-name">First name</label>
+
+    <div class="input-with-icon">
+        @* Decorative user icon inside the field. *@
+        <span class="field-icon field-icon-left" aria-hidden="true">
+            <svg viewBox="0 0 24 24">
+                <circle cx="12" cy="8" r="4" />
+                <path d="M4 21a8 8 0 0 1 16 0" />
+            </svg>
+        </span>
+
+        @* Store the submitted first name in Input.FirstName. *@
+        <InputText
+            id="first-name"
+            @bind-Value="Input!.FirstName"
+            autocomplete="given-name"
+            placeholder="Enter your first name" />
+    </div>
+
+    @* Show the FirstName validation message when the form is submitted. *@
+    <ValidationMessage For="() => Input!.FirstName" />
+</div>
+
+        @* Last-name field bound to the Registration input model. *@
+<div class="form-group">
+    <label for="last-name">Last name</label>
+
+    <div class="input-with-icon">
+        @* Decorative user icon inside the field. *@
+        <span class="field-icon field-icon-left" aria-hidden="true">
+            <svg viewBox="0 0 24 24">
+                <circle cx="12" cy="8" r="4" />
+                <path d="M4 21a8 8 0 0 1 16 0" />
+            </svg>
+        </span>
+
+        @* Store the submitted last name in Input.LastName. *@
+        <InputText
+            id="last-name"
+            @bind-Value="Input!.LastName"
+            autocomplete="family-name"
+            placeholder="Enter your last name" />
+    </div>
+
+    @* Show the LastName validation message when required. *@
+    <ValidationMessage For="() => Input!.LastName" />
+</div>
+    </div>
+
+    @* Work-email field bound to the Registration input model. *@
+<div class="form-group">
+    <label for="work-email">Work email</label>
+
+    <div class="input-with-icon">
+        @* Decorative envelope icon inside the field. *@
+        <span class="field-icon field-icon-left" aria-hidden="true">
+            <svg viewBox="0 0 24 24">
+                <rect x="3" y="5" width="18" height="14" rx="2" />
+                <path d="m3 7 9 6 9-6" />
+            </svg>
+        </span>
+
+        @* Store the submitted email address in Input.WorkEmail. *@
+        <InputText
+            id="work-email"
+            type="email"
+            @bind-Value="Input!.WorkEmail"
+            autocomplete="email"
+            placeholder="Enter your work email address" />
+    </div>
+
+    @* Show the WorkEmail validation message when required. *@
+    <ValidationMessage For="() => Input!.WorkEmail" />
+</div>
+
+    @* Password and confirmation fields share the final form row. *@
+    <div class="registration-field-row">
+
+        @* Password field bound to the Registration input model. *@
+<div class="form-group">
+    <label for="register-password">Password</label>
+
+    <div class="input-with-icon password-input">
+        @* Decorative lock icon inside the left side. *@
+        <span class="field-icon field-icon-left" aria-hidden="true">
+            <svg viewBox="0 0 24 24">
+                <rect x="5" y="10" width="14" height="10" rx="2" />
+                <path d="M8 10V7a4 4 0 0 1 8 0v3" />
+            </svg>
+        </span>
+
+        @* Store the submitted password in Input.Password. *@
+        <InputText
+            id="register-password"
+            type="password"
+            @bind-Value="Input!.Password"
+            autocomplete="new-password"
+            placeholder="Create a password" />
+
+        @* Decorative eye icon inside the right side. *@
+        <span class="field-icon field-icon-right" aria-hidden="true">
+            <svg viewBox="0 0 24 24">
+                <path d="M2.5 12s3.5-6 9.5-6 9.5 6 9.5 6-3.5 6-9.5 6-9.5-6-9.5-6Z" />
+                <circle cx="12" cy="12" r="2.5" />
+            </svg>
+        </span>
+    </div>
+
+    @* Show the Password validation message when required. *@
+    <ValidationMessage For="() => Input!.Password" />
+</div>
+
+        @* Confirm-password field bound to the Registration input model. *@
+<div class="form-group">
+    <label for="confirm-password">Confirm password</label>
+
+    <div class="input-with-icon password-input">
+        @* Decorative lock icon inside the left side. *@
+        <span class="field-icon field-icon-left" aria-hidden="true">
+            <svg viewBox="0 0 24 24">
+                <rect x="5" y="10" width="14" height="10" rx="2" />
+                <path d="M8 10V7a4 4 0 0 1 8 0v3" />
+            </svg>
+        </span>
+
+        @* Store the repeated password in Input.ConfirmPassword. *@
+        <InputText
+            id="confirm-password"
+            type="password"
+            @bind-Value="Input!.ConfirmPassword"
+            autocomplete="new-password"
+            placeholder="Confirm your password" />
+
+        @* Decorative eye icon inside the right side. *@
+        <span class="field-icon field-icon-right" aria-hidden="true">
+            <svg viewBox="0 0 24 24">
+                <path d="M2.5 12s3.5-6 9.5-6 9.5 6 9.5 6-3.5 6-9.5 6-9.5-6-9.5-6Z" />
+                <circle cx="12" cy="12" r="2.5" />
+            </svg>
+        </span>
+    </div>
+
+    @* Show an error when the confirmation is missing or does not match. *@
+    <ValidationMessage For="() => Input!.ConfirmPassword" />
+</div>
+    </div>
+
+@* =========================================================
+   PASSWORD REQUIREMENTS PANEL
+   Displays the account password rules beneath the two
+   password fields. Functional validation will be added later.
+   ========================================================= *@
+<div class="password-requirements">
+
+    @* Small security-shield icon shown at the left of the panel. *@
+    <div class="password-requirements-icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24">
+            <path d="M12 3 5 6v5c0 4.6 2.8 8.8 7 10 4.2-1.2 7-5.4 7-10V6l-7-3Z" />
+            <path d="m9.5 11.5 1.7 1.5 3.3-3.5" />
+        </svg>
+    </div>
+
+    @* Password-requirements heading and rule list. *@
+    <div class="password-requirements-content">
+        <strong>Password requirements</strong>
+
+        @* The rules are arranged in two columns, matching the reference. *@
+        <div class="password-requirements-grid">
+
+            @* Minimum-length requirement. *@
+            <div class="password-requirement">
+                <span class="requirement-check" aria-hidden="true">✓</span>
+                <span>At least 8 characters</span>
+            </div>
+
+            @* Special-character requirement. *@
+            <div class="password-requirement">
+                <span class="requirement-check" aria-hidden="true">✓</span>
+                <span>Include a special character</span>
+            </div>
+
+            @* Uppercase-letter requirement. *@
+            <div class="password-requirement">
+                <span class="requirement-check" aria-hidden="true">✓</span>
+                <span>Include uppercase letter</span>
+            </div>
+
+            @* Password-confirmation requirement. *@
+            <div class="password-requirement">
+                <span class="requirement-check" aria-hidden="true">✓</span>
+                <span>Passwords must match</span>
+            </div>
+
+            @* Number requirement. *@
+            <div class="password-requirement">
+                <span class="requirement-check" aria-hidden="true">✓</span>
+                <span>Include a number</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+@* =========================================================
+   REGISTRATION TERMS AGREEMENT
+   Binds the employee's acknowledgement to the Registration
+   input model and displays an error when it is not accepted.
+   ========================================================= *@
+<div class="registration-terms-group">
+    <label class="registration-terms">
+        @* Store the checkbox state in Input.AcceptTerms. *@
+        <InputCheckbox @bind-Value="Input!.AcceptTerms" />
+
+        @* Agreement wording with links to the relevant policies. *@
+        <span>
+            I agree to the
+            <a href="#">Terms of Service</a>
+            and
+            <a href="#">Privacy Policy</a>.
+        </span>
+    </label>
+
+    @* Show an error when the policies have not been accepted. *@
+    <ValidationMessage For="() => Input!.AcceptTerms" />
+</div>
+
+   @* Display account-level errors returned by ASP.NET Core Identity. *@
+@if (IdentityErrors is not null)
+{
+    <div class="registration-errors" role="alert">
+        <strong>We couldn’t create your account.</strong>
+
+        <ul>
+            @foreach (var error in IdentityErrors)
+            {
+                <li>@error.Description</li>
+            }
+        </ul>
+    </div>
+}
+
+@* Submit the completed Registration form for validation
+   and secure Identity account creation. *@
+<button class="sign-in-button" type="submit">
+    Create Account
+</button>
+</EditForm>
+
+            <div class="account-divider">
+                <span></span>
+                <p>or</p>
+                <span></span>
+            </div>
+
+            @* =========================================================
+   REGISTRATION SIGN-IN PROMPT
+   Directs existing employees back to the completed login page.
+   ========================================================= *@
+<p class="create-account">
+    @* Registration-specific prompt for users who already have an account. *@
+    Already have an account?
+
+    @* Return to the login page at the root route. *@
+    <a href="/">Sign in</a>
+</p>
+
+            <div class="support-card">
+    <div class="support-icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24">
+            <path d="M4 13v-1a8 8 0 0 1 16 0v1" />
+            <path d="M4 13a2 2 0 0 1 2-2h1v7H6a2 2 0 0 1-2-2v-3Z" />
+            <path d="M20 13a2 2 0 0 0-2-2h-1v7h1a2 2 0 0 0 2-2v-3Z" />
+            <path d="M17 18c0 2-2 3-5 3" />
+        </svg>
+    </div>
+
+   @* =========================================================
+   REGISTRATION SUPPORT COPY
+   Changes only the wording so the existing support card
+   relates specifically to creating a new employee account.
+   ========================================================= *@
+<div class="support-copy">
+    @* Registration-specific support heading. *@
+    <strong>Need help creating your account?</strong>
+
+    @* Registration-specific supporting message. *@
+    <span>Our support team is here to help you get started.</span>
+
+    @* Existing support contact details remain unchanged. *@
+    <div class="support-contact">
+        <a href="mailto:support@company.com">support@company.com</a>
+        <span>• +1 (555) 123-4567</span>
+    </div>
+</div>
+
+    <div class="support-chevron" aria-hidden="true">
+        <svg viewBox="0 0 24 24">
+            <path d="m9 18 6-6-6-6" />
+        </svg>
+    </div>
+</div>
+
+
+            
+        </div>
+    </section>
+</main>
+
+@* Holds the submitted Registration values and account-creation logic. *@
+@code {
+    // Receive values posted by the uniquely named Registration form.
+    [SupplyParameterFromForm(FormName = "register")]
+    private SecureEmployeePortal.Models.RegisterInputModel? Input { get; set; }
+
+    // Hold any account errors returned by ASP.NET Core Identity,
+    // such as a duplicate email or an invalid password.
+    private IEnumerable<IdentityError>? IdentityErrors { get; set; }
+
+    // Create a blank input model on the first page load,
+    // while preserving posted values during form submission.
+    protected override void OnInitialized()
+    {
+        Input ??= new();
+    }
+
+    // Create a permanent Identity account after the submitted
+    // Registration form has passed its validation rules.
+    private async Task RegisterUserAsync()
+    {
+        // Clear errors left over from an earlier failed attempt.
+        IdentityErrors = null;
+
+        // Remove accidental spaces around the submitted email.
+        var email = Input!.WorkEmail.Trim();
+
+        // Convert the temporary Registration details into the
+        // permanent employee-account type stored by Identity.
+        var user = new ApplicationUser
+        {
+            UserName = email,
+            Email = email,
+            FirstName = Input.FirstName.Trim(),
+            LastName = Input.LastName.Trim()
+        };
+
+        // Ask Identity to validate the password and create
+        // the employee account in SQL Server.
+        var result = await UserManager.CreateAsync(
+            user,
+            Input.Password);
+
+        // Preserve Identity's explanations when creation fails.
+        if (!result.Succeeded)
+        {
+            IdentityErrors = result.Errors;
+            return;
+        }
+
+        // Return the newly registered employee to the Login page.
+        NavigationManager.NavigateTo("/?registration=success");
+    }
+}

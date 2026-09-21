@@ -1,0 +1,205 @@
+@* Employee account-security page with password change and recent security activity. *@
+@page "/security"
+@layout EmployeeLayout
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Identity
+@using Microsoft.EntityFrameworkCore
+@using SecureEmployeePortal.Data
+@using SecureEmployeePortal.Data.Entities
+@using SecureEmployeePortal.Models
+@attribute [Authorize]
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject UserManager<ApplicationUser> UserManager
+@inject SignInManager<ApplicationUser> SignInManager
+@inject IDbContextFactory<ApplicationDbContext> DbFactory
+@inject SecureEmployeePortal.Services.PortalActivityService ActivityService
+@inject SecureEmployeePortal.Services.PortalAuthorizationService AuthorizationService
+
+<PageTitle>My Security | Secure Employee Portal</PageTitle>
+
+<section class="portal-page">
+    <header class="portal-page-header">
+        <div>
+            <p class="eyebrow">Account protection</p>
+            <h1>My Security</h1>
+            <p>Manage your password and review security events linked to your own employee account.</p>
+        </div>
+    </header>
+
+    <div class="portal-grid portal-grid-two">
+        <article class="portal-card">
+            <p class="eyebrow">Credentials</p>
+            <h2>Change password</h2>
+            <p class="portal-muted">Your password is processed by ASP.NET Core Identity and is never stored as plain text.</p>
+
+            @if (!string.IsNullOrWhiteSpace(StatusMessage))
+            {
+                <div class="@(SaveSucceeded ? "portal-success-message" : "portal-error-message")" role="status">@StatusMessage</div>
+            }
+
+            <EditForm Model="Input" OnValidSubmit="ChangePasswordAsync" FormName="change-password">
+                <DataAnnotationsValidator />
+                <div class="portal-form-stack">
+                    <label>
+                        <span>Current password</span>
+                        <InputText type="password" @bind-Value="Input!.CurrentPassword" autocomplete="current-password" maxlength="100" />
+                        <ValidationMessage For="() => Input!.CurrentPassword" />
+                    </label>
+                    <label>
+                        <span>New password</span>
+                        <InputText type="password" @bind-Value="Input!.NewPassword" autocomplete="new-password" maxlength="100" />
+                        <ValidationMessage For="() => Input!.NewPassword" />
+                    </label>
+                    <label>
+                        <span>Confirm new password</span>
+                        <InputText type="password" @bind-Value="Input!.ConfirmPassword" autocomplete="new-password" maxlength="100" />
+                        <ValidationMessage For="() => Input!.ConfirmPassword" />
+                    </label>
+                </div>
+                <p class="portal-form-note password-policy-note">Use at least 8 characters with uppercase and lowercase letters, a number and a special character.</p>
+                <button class="portal-primary-button" type="submit" disabled="@IsSaving">@(IsSaving ? "Updating…" : "Update password")</button>
+            </EditForm>
+        </article>
+
+        <article class="portal-card">
+            <p class="eyebrow">Account status</p>
+            <h2>Security summary</h2>
+            <dl class="portal-detail-list">
+                <div><dt>Status</dt><dd><span class="portal-status-badge">@CurrentUser?.AccountStatus</span></dd></div>
+                <div><dt>Last sign-in</dt><dd>@FormatDate(CurrentUser?.LastLoginAt)</dd></div>
+                <div><dt>Last password change</dt><dd>@FormatDate(CurrentUser?.LastPasswordChangeAt)</dd></div>
+                <div><dt>Failed sign-in count</dt><dd>@(CurrentUser?.AccessFailedCount ?? 0)</dd></div>
+            </dl>
+        </article>
+    </div>
+
+    <article class="portal-card portal-section-space">
+        <div class="portal-card-heading">
+            <div><p class="eyebrow">Your account only</p><h2>Recent security activity</h2></div>
+        </div>
+
+        @if (Events.Count == 0)
+        {
+            <div class="portal-empty-state">No security events have been recorded for this account yet.</div>
+        }
+        else
+        {
+            <div class="portal-table-wrap">
+                <table class="portal-table">
+                    <thead><tr><th>When</th><th>Event</th><th>Result</th><th>Details</th></tr></thead>
+                    <tbody>
+                    @foreach (var item in Events)
+                    {
+                        <tr>
+                            <td>@item.OccurredAt.ToLocalTime().ToString("dd MMM yyyy HH:mm")</td>
+                            <td>@item.EventType</td>
+                            <td><span class="@(item.Succeeded ? "result-success" : "result-failure")">@(item.Succeeded ? "Success" : "Failed")</span></td>
+                            <td>@item.Description</td>
+                        </tr>
+                    }
+                    </tbody>
+                </table>
+            </div>
+        }
+    </article>
+</section>
+
+@code {
+    [SupplyParameterFromForm(FormName = "change-password")]
+    private ChangePasswordInputModel? Input { get; set; }
+
+    private ApplicationUser? CurrentUser { get; set; }
+    private List<SecurityEvent> Events { get; set; } = [];
+    private string? StatusMessage { get; set; }
+    private bool SaveSucceeded { get; set; }
+    private bool IsSaving { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        // Preserve posted static-SSR form values; only create a model for an initial GET.
+        Input ??= new();
+
+        var state = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        CurrentUser = await UserManager.GetUserAsync(state.User);
+        await LoadEventsAsync();
+    }
+
+    private async Task ChangePasswordAsync()
+    {
+        if (CurrentUser is null)
+        {
+            SaveSucceeded = false;
+            StatusMessage = "Your signed-in account could not be verified.";
+            return;
+        }
+
+        if (IsSaving)
+        {
+            return;
+        }
+
+        IsSaving = true;
+        StatusMessage = null;
+
+        try
+        {
+            if (!await AuthorizationService.IsActiveUserAsync(CurrentUser.Id))
+            {
+                SaveSucceeded = false;
+                StatusMessage = "Your account is no longer active. Sign in again or contact an administrator before changing your password.";
+                return;
+            }
+
+            var input = Input!;
+            // Persist the password-change timestamp in the same Identity update as the new
+            // password hash rather than relying on a second database write afterwards.
+            var previousPasswordChangeAt = CurrentUser.LastPasswordChangeAt;
+            CurrentUser.LastPasswordChangeAt = DateTimeOffset.UtcNow;
+            var result = await UserManager.ChangePasswordAsync(CurrentUser, input.CurrentPassword, input.NewPassword);
+            SaveSucceeded = result.Succeeded;
+
+            if (!result.Succeeded)
+            {
+                // The failed attempt did not persist through Identity, so keep the rendered
+                // security summary aligned with the database value as well.
+                CurrentUser.LastPasswordChangeAt = previousPasswordChangeAt;
+                StatusMessage = "The password could not be changed. Check your current password and make sure the new password meets every requirement.";
+                await ActivityService.RecordSecurityEventAsync(CurrentUser.Id, "PasswordChangeFailed", false, "Employee password change failed.");
+                return;
+            }
+
+            // Refresh the authentication cookie after Identity changes the security stamp so
+            // the employee stays signed in with the newly secured account.
+            await SignInManager.RefreshSignInAsync(CurrentUser);
+            await ActivityService.RecordSecurityEventAsync(CurrentUser.Id, "PasswordChanged", true, "Employee changed their password.");
+
+            StatusMessage = "Password updated successfully.";
+            Input = new();
+            await LoadEventsAsync();
+        }
+        finally
+        {
+            IsSaving = false;
+        }
+    }
+
+    private async Task LoadEventsAsync()
+    {
+        if (CurrentUser is null)
+        {
+            Events = [];
+            return;
+        }
+
+        await using var db = await DbFactory.CreateDbContextAsync();
+        Events = await db.SecurityEvents
+            .Where(item => item.UserId == CurrentUser.Id)
+            .OrderByDescending(item => item.OccurredAt)
+            .Take(10)
+            .AsNoTracking()
+            .ToListAsync();
+    }
+
+    private static string FormatDate(DateTimeOffset? value) =>
+        value?.ToLocalTime().ToString("dd MMM yyyy, HH:mm") ?? "Not recorded yet";
+}

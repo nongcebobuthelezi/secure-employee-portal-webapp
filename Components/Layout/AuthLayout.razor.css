@@ -1,0 +1,17 @@
+.auth-layout {
+    min-height: 100vh;
+    display: grid;
+    place-items: center;
+    padding: 36px;
+    background:
+        radial-gradient(circle at top left, rgba(57, 124, 214, 0.06), transparent 30%),
+        #f3f5f8;
+    box-sizing: border-box;
+}
+
+@media (max-width: 950px) {
+    .auth-layout {
+        display: block;
+        padding: 0;
+    }
+}

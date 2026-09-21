@@ -1,0 +1,173 @@
+@* Administrator-only employee account creation with Identity validation and audit logging. *@
+@page "/admin/users/create"
+@layout EmployeeLayout
+@rendermode InteractiveServer
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Identity
+@using Microsoft.EntityFrameworkCore
+@using SecureEmployeePortal.Data
+@using SecureEmployeePortal.Models
+@using SecureEmployeePortal.Services
+@attribute [Authorize(Roles = "Administrator")]
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject UserManager<ApplicationUser> UserManager
+@inject RoleManager<IdentityRole> RoleManager
+@inject SecureEmployeePortal.Services.PortalActivityService ActivityService
+@inject SecureEmployeePortal.Services.PortalAuthorizationService AuthorizationService
+@inject NavigationManager NavigationManager
+
+<PageTitle>Create Employee | Secure Employee Portal</PageTitle>
+
+<section class="portal-page">
+    <header class="portal-page-header">
+        <div>
+            <p class="eyebrow">Administrator only</p>
+            <h1>Create Employee Account</h1>
+            <p>Create a protected employee identity and assign the least access needed for the role.</p>
+        </div>
+        <a class="portal-secondary-link" href="/admin/users">Back to users</a>
+    </header>
+
+    <article class="portal-card portal-form-card">
+        @if (!string.IsNullOrWhiteSpace(StatusMessage))
+        {
+            <div class="@(Succeeded ? "portal-success-message" : "portal-error-message")" role="status">@StatusMessage</div>
+        }
+
+        <EditForm Model="Input" OnValidSubmit="CreateAsync" FormName="admin-create-user" class="portal-form">
+            <DataAnnotationsValidator />
+            <ValidationSummary />
+
+            <div class="portal-form-grid">
+                <label><span>First name</span><InputText @bind-Value="Input.FirstName" autocomplete="given-name" maxlength="100" /><ValidationMessage For="() => Input.FirstName" /></label>
+                <label><span>Last name</span><InputText @bind-Value="Input.LastName" autocomplete="family-name" maxlength="100" /><ValidationMessage For="() => Input.LastName" /></label>
+                <label><span>Work email</span><InputText type="email" @bind-Value="Input.Email" autocomplete="email" maxlength="256" /><ValidationMessage For="() => Input.Email" /></label>
+                <label><span>Employee number</span><InputText @bind-Value="Input.EmployeeNumber" maxlength="32" /><ValidationMessage For="() => Input.EmployeeNumber" /></label>
+                <label><span>Department</span><InputText @bind-Value="Input.Department" maxlength="120" /><ValidationMessage For="() => Input.Department" /></label>
+                <label><span>Job title</span><InputText @bind-Value="Input.JobTitle" maxlength="120" /><ValidationMessage For="() => Input.JobTitle" /></label>
+                <label>
+                    <span>Role</span>
+                    <InputSelect @bind-Value="Input.Role">
+                        @foreach (var role in Roles)
+                        {
+                            <option value="@role">@role</option>
+                        }
+                    </InputSelect>
+                    <ValidationMessage For="() => Input.Role" />
+                </label>
+                <label><span>Temporary password</span><InputText type="password" autocomplete="new-password" maxlength="100" @bind-Value="Input.TemporaryPassword" /><ValidationMessage For="() => Input.TemporaryPassword" /></label>
+                <label><span>Confirm temporary password</span><InputText type="password" autocomplete="new-password" maxlength="100" @bind-Value="Input.ConfirmTemporaryPassword" /><ValidationMessage For="() => Input.ConfirmTemporaryPassword" /></label>
+            </div>
+
+            <p class="portal-form-note password-policy-note">Temporary passwords must use at least 8 characters with uppercase and lowercase letters, a number and a special character.</p>
+
+            <div class="portal-warning-message portal-section-space">
+                The temporary password is never written to portal logs. Share it with the employee through an appropriate secure channel and ask them to change it after first sign-in.
+            </div>
+
+            <button class="portal-primary-button" type="submit" disabled="@IsSaving">@(IsSaving ? "Creating…" : "Create employee account")</button>
+        </EditForm>
+    </article>
+</section>
+
+@code {
+    private CreateEmployeeInputModel Input { get; set; } = new();
+    private List<string> Roles { get; set; } = [];
+    private string? StatusMessage { get; set; }
+    private bool Succeeded { get; set; }
+    private bool IsSaving { get; set; }
+
+    protected override Task OnInitializedAsync()
+    {
+        // The UI exposes only the three roles defined by the portal's fixed permission model.
+        Roles = PortalSeedService.Roles.ToList();
+        return Task.CompletedTask;
+    }
+
+    private async Task CreateAsync()
+    {
+        if (IsSaving)
+        {
+            return;
+        }
+
+        IsSaving = true;
+        StatusMessage = null;
+        Succeeded = false;
+
+        try
+        {
+            var state = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+            var actor = await UserManager.GetUserAsync(state.User);
+            if (actor is null || !await AuthorizationService.IsActiveAdministratorAsync(actor.Id))
+            {
+                StatusMessage = "Your administrator access is no longer active. Sign in again before creating employee accounts.";
+                return;
+            }
+
+            if (!AccountAccessRules.IsKnownRole(Input.Role) || !await RoleManager.RoleExistsAsync(Input.Role))
+            {
+                StatusMessage = "The selected role is not available.";
+                return;
+            }
+
+            var email = Input.Email.Trim();
+            var employeeNumber = Input.EmployeeNumber.Trim();
+
+            if (await UserManager.FindByEmailAsync(email) is not null)
+            {
+                StatusMessage = "An account with that work email already exists.";
+                return;
+            }
+
+            if (await UserManager.Users.AnyAsync(user => user.EmployeeNumber == employeeNumber))
+            {
+                StatusMessage = "That employee number is already assigned to another account.";
+                return;
+            }
+
+            var user = new ApplicationUser
+            {
+                UserName = email,
+                Email = email,
+                FirstName = Input.FirstName.Trim(),
+                LastName = Input.LastName.Trim(),
+                EmployeeNumber = employeeNumber,
+                Department = Input.Department.Trim(),
+                JobTitle = Input.JobTitle.Trim(),
+                AccountStatus = AccountStatus.Active,
+                CreatedAt = DateTimeOffset.UtcNow,
+                EmailConfirmed = true
+            };
+
+            var createResult = await UserManager.CreateAsync(user, Input.TemporaryPassword);
+            if (!createResult.Succeeded)
+            {
+                StatusMessage = "The employee account could not be created. Check the account details and make sure the temporary password meets every requirement.";
+                await ActivityService.RecordAuditAsync(actor.Id, null, "AccountCreated", null, email, false);
+                return;
+            }
+
+            var roleResult = await UserManager.AddToRoleAsync(user, Input.Role);
+            if (!roleResult.Succeeded)
+            {
+                var deleteResult = await UserManager.DeleteAsync(user);
+                StatusMessage = deleteResult.Succeeded
+                    ? "The employee account could not be assigned the selected role. The partial account was rolled back."
+                    : "The employee account could not be assigned the selected role, and automatic rollback also failed. Review the user list before trying again.";
+                await ActivityService.RecordAuditAsync(actor.Id, user.Id, "AccountCreated", null, email, false);
+                return;
+            }
+
+            await ActivityService.RecordAuditAsync(actor.Id, user.Id, "AccountCreated", null, $"{email} ({Input.Role})", true);
+            await ActivityService.RecordSecurityEventAsync(user.Id, "AccountCreatedByAdministrator", true, "Employee account created by an authorised administrator.");
+
+            Succeeded = true;
+            NavigationManager.NavigateTo($"/admin/users/{Uri.EscapeDataString(user.Id)}");
+        }
+        finally
+        {
+            IsSaving = false;
+        }
+    }
+}

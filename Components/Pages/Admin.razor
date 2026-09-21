@@ -1,0 +1,136 @@
+@* Administrator command centre for account, access and security management. *@
+@page "/admin"
+@layout EmployeeLayout
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Identity
+@using Microsoft.EntityFrameworkCore
+@using SecureEmployeePortal.Data
+@using SecureEmployeePortal.Data.Entities
+@using SecureEmployeePortal.Services
+@attribute [Authorize(Roles = "Administrator")]
+@inject UserManager<ApplicationUser> UserManager
+@inject IDbContextFactory<ApplicationDbContext> DbFactory
+
+<PageTitle>Security Admin | Secure Employee Portal</PageTitle>
+
+<section class="portal-page">
+    <header class="portal-page-header">
+        <div>
+            <p class="eyebrow">Administrator only</p>
+            <h1>Security Administration</h1>
+            <p>Manage employee identities, account state, access decisions and traceable security activity from one protected console.</p>
+        </div>
+        <a class="portal-primary-link" href="/admin/users">Manage users</a>
+    </header>
+
+    <div class="portal-grid portal-grid-four">
+        <article class="portal-card metric-card"><span>Total users</span><strong>@TotalUsers</strong></article>
+        <article class="portal-card metric-card"><span>Active accounts</span><strong>@ActiveUsers</strong></article>
+        <article class="portal-card metric-card"><span>Suspended</span><strong>@SuspendedUsers</strong></article>
+        <article class="portal-card metric-card"><span>Administrators</span><strong>@AdministratorCount</strong></article>
+        <article class="portal-card metric-card"><span>Failed sign-ins today</span><strong>@FailedLoginsToday</strong></article>
+        <article class="portal-card metric-card"><span>Open access requests</span><strong>@OpenAccessRequests</strong></article>
+        <article class="portal-card metric-card"><span>Security events today</span><strong>@SecurityEventsToday</strong></article>
+        <article class="portal-card metric-card"><span>Audit actions today</span><strong>@AuditActionsToday</strong></article>
+    </div>
+
+    <div class="admin-link-grid portal-section-space">
+        <a href="/admin/users">
+            <strong>User management</strong>
+            <span>Search employee accounts, create users, inspect access and change account status.</span>
+        </a>
+        <a href="/admin/access-requests">
+            <strong>Access requests</strong>
+            <span>Approve or reject protected-resource requests with an auditable administrator decision.</span>
+        </a>
+        <a href="/admin/security-events">
+            <strong>Security events</strong>
+            <span>Review sign-ins, password actions, account changes and protected employee workflows.</span>
+        </a>
+        <a href="/admin/audit-logs">
+            <strong>Audit logs</strong>
+            <span>Trace who performed high-risk account and permission changes and whether they succeeded.</span>
+        </a>
+        <a href="/admin/users/create">
+            <strong>Create employee</strong>
+            <span>Create a protected Identity account and assign the least access required.</span>
+        </a>
+        <a href="/admin/roles">
+            <strong>Roles &amp; permissions</strong>
+            <span>Review the Employee, Manager and Administrator access model.</span>
+        </a>
+    </div>
+
+    <article class="portal-card portal-section-space">
+        <div class="portal-card-heading">
+            <div>
+                <p class="eyebrow">Latest system activity</p>
+                <h2>Recent security events</h2>
+            </div>
+            <a class="portal-text-link" href="/admin/security-events">View all →</a>
+        </div>
+
+        @if (RecentEvents.Count == 0)
+        {
+            <div class="portal-empty-state">No security events have been recorded yet.</div>
+        }
+        else
+        {
+            <ul class="portal-activity-list">
+                @foreach (var item in RecentEvents)
+                {
+                    <li>
+                        <span class="activity-dot @(item.Succeeded ? "ok" : "bad")" aria-hidden="true"></span>
+                        <div>
+                            <strong>@item.EventType</strong>
+                            <span>@item.Description</span>
+                            <small>@item.OccurredAt.ToLocalTime().ToString("dd MMM yyyy, HH:mm")</small>
+                        </div>
+                    </li>
+                }
+            </ul>
+        }
+    </article>
+
+    <article class="portal-card portal-section-space">
+        <p class="eyebrow">Security boundary</p>
+        <h2>Server-enforced access</h2>
+        <p class="portal-muted">This administration area is protected by ASP.NET Core role authorisation. Employee accounts cannot gain administrator access by navigating directly to these URLs or by hiding and showing frontend controls.</p>
+    </article>
+</section>
+
+@code {
+    private int TotalUsers { get; set; }
+    private int ActiveUsers { get; set; }
+    private int SuspendedUsers { get; set; }
+    private int AdministratorCount { get; set; }
+    private int FailedLoginsToday { get; set; }
+    private int OpenAccessRequests { get; set; }
+    private int SecurityEventsToday { get; set; }
+    private int AuditActionsToday { get; set; }
+    private List<SecurityEvent> RecentEvents { get; set; } = [];
+
+    protected override async Task OnInitializedAsync()
+    {
+        TotalUsers = await UserManager.Users.CountAsync();
+        ActiveUsers = await UserManager.Users.CountAsync(user => user.AccountStatus == AccountStatus.Active);
+        SuspendedUsers = await UserManager.Users.CountAsync(user => user.AccountStatus == AccountStatus.Suspended);
+        AdministratorCount = (await UserManager.GetUsersInRoleAsync("Administrator")).Count;
+
+        var todayUtc = DateTimeOffset.UtcNow.Date;
+        var start = new DateTimeOffset(todayUtc, TimeSpan.Zero);
+        var end = start.AddDays(1);
+
+        await using var db = await DbFactory.CreateDbContextAsync();
+        FailedLoginsToday = await db.SecurityEvents.CountAsync(item =>
+            item.EventType == "LoginFailed" && item.OccurredAt >= start && item.OccurredAt < end);
+        OpenAccessRequests = await db.AccessRequests.CountAsync(item => item.Status == AccessRequestRules.Pending);
+        SecurityEventsToday = await db.SecurityEvents.CountAsync(item => item.OccurredAt >= start && item.OccurredAt < end);
+        AuditActionsToday = await db.AuditLogs.CountAsync(item => item.OccurredAt >= start && item.OccurredAt < end);
+        RecentEvents = await db.SecurityEvents
+            .OrderByDescending(item => item.OccurredAt)
+            .Take(6)
+            .AsNoTracking()
+            .ToListAsync();
+    }
+}

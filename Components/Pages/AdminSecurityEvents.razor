@@ -1,0 +1,142 @@
+@* Administrator-only security-event console with practical filtering. *@
+@page "/admin/security-events"
+@layout EmployeeLayout
+@rendermode InteractiveServer
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Identity
+@using Microsoft.EntityFrameworkCore
+@using SecureEmployeePortal.Data
+@using SecureEmployeePortal.Data.Entities
+@attribute [Authorize(Roles = "Administrator")]
+@inject IDbContextFactory<ApplicationDbContext> DbFactory
+@inject UserManager<ApplicationUser> UserManager
+
+<PageTitle>Security Events | Secure Employee Portal</PageTitle>
+
+<section class="portal-page">
+    <header class="portal-page-header">
+        <div>
+            <p class="eyebrow">Administrator only</p>
+            <h1>Security Events</h1>
+            <p>Inspect authentication, password, account-status and protected-workflow events without exposing credentials or reset tokens.</p>
+        </div>
+        <a class="portal-secondary-link" href="/admin">Back to admin</a>
+    </header>
+
+    <article class="portal-card">
+        <div class="admin-filter-row admin-filter-row-four">
+            <label class="portal-search-field">
+                <span>Search</span>
+                <input @bind="SearchTerm" @bind:event="oninput" placeholder="Employee, email, event or details" />
+            </label>
+            <label>
+                <span>Event type</span>
+                <select @bind="EventTypeFilter">
+                    <option value="">All events</option>
+                    @foreach (var eventType in EventTypes)
+                    {
+                        <option value="@eventType">@eventType</option>
+                    }
+                </select>
+            </label>
+            <label>
+                <span>Result</span>
+                <select @bind="ResultFilter">
+                    <option value="">All results</option>
+                    <option value="success">Success</option>
+                    <option value="failed">Failed</option>
+                </select>
+            </label>
+            <label>
+                <span>Period</span>
+                <select @bind="PeriodFilter">
+                    <option value="7">Last 7 days</option>
+                    <option value="30">Last 30 days</option>
+                    <option value="90">Last 90 days</option>
+                    <option value="0">All loaded</option>
+                </select>
+            </label>
+        </div>
+
+        @if (!Loaded)
+        {
+            <div class="portal-state-card">Loading security events…</div>
+        }
+        else if (FilteredEvents.Count == 0)
+        {
+            <div class="portal-empty-state">No security events match the current filters.</div>
+        }
+        else
+        {
+            <div class="portal-table-wrap">
+                <table class="portal-table">
+                    <thead><tr><th>When</th><th>Employee</th><th>Event</th><th>Result</th><th>Details</th></tr></thead>
+                    <tbody>
+                    @foreach (var item in FilteredEvents)
+                    {
+                        <tr>
+                            <td>@item.Event.OccurredAt.ToLocalTime().ToString("dd MMM yyyy HH:mm")</td>
+                            <td>@item.UserLabel</td>
+                            <td><strong>@item.Event.EventType</strong></td>
+                            <td><span class="@(item.Event.Succeeded ? "result-success" : "result-failure")">@(item.Event.Succeeded ? "Success" : "Failed")</span></td>
+                            <td>@item.Event.Description</td>
+                        </tr>
+                    }
+                    </tbody>
+                </table>
+            </div>
+        }
+    </article>
+</section>
+
+@code {
+    private List<SecurityEventRow> Events { get; set; } = [];
+    private List<string> EventTypes { get; set; } = [];
+    private string SearchTerm { get; set; } = string.Empty;
+    private string EventTypeFilter { get; set; } = string.Empty;
+    private string ResultFilter { get; set; } = string.Empty;
+    private string PeriodFilter { get; set; } = "30";
+    private bool Loaded { get; set; }
+
+    private List<SecurityEventRow> FilteredEvents => Events
+        .Where(row => string.IsNullOrWhiteSpace(SearchTerm)
+            || row.UserLabel.Contains(SearchTerm, StringComparison.OrdinalIgnoreCase)
+            || row.Event.EventType.Contains(SearchTerm, StringComparison.OrdinalIgnoreCase)
+            || row.Event.Description.Contains(SearchTerm, StringComparison.OrdinalIgnoreCase))
+        .Where(row => string.IsNullOrWhiteSpace(EventTypeFilter) || row.Event.EventType == EventTypeFilter)
+        .Where(row => ResultFilter switch
+        {
+            "success" => row.Event.Succeeded,
+            "failed" => !row.Event.Succeeded,
+            _ => true
+        })
+        .Where(row => int.TryParse(PeriodFilter, out var days) && days > 0
+            ? row.Event.OccurredAt >= DateTimeOffset.UtcNow.AddDays(-days)
+            : true)
+        .ToList();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await using var db = await DbFactory.CreateDbContextAsync();
+        var events = await db.SecurityEvents
+            .OrderByDescending(item => item.OccurredAt)
+            .Take(500)
+            .AsNoTracking()
+            .ToListAsync();
+
+        var userIds = events.Where(item => item.UserId is not null).Select(item => item.UserId!).Distinct().ToList();
+        var users = await UserManager.Users
+            .Where(user => userIds.Contains(user.Id))
+            .AsNoTracking()
+            .ToDictionaryAsync(user => user.Id, user => string.IsNullOrWhiteSpace(user.FullName) ? user.Email ?? user.Id : $"{user.FullName} ({user.Email})");
+
+        Events = events.Select(item => new SecurityEventRow(
+            item,
+            item.UserId is not null && users.TryGetValue(item.UserId, out var label) ? label : "Unknown / unauthenticated account"))
+            .ToList();
+        EventTypes = events.Select(item => item.EventType).Distinct().OrderBy(item => item).ToList();
+        Loaded = true;
+    }
+
+    private sealed record SecurityEventRow(SecurityEvent Event, string UserLabel);
+}

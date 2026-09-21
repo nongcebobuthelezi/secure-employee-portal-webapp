@@ -1,0 +1,389 @@
+@* =========================================================
+   AUTHENTICATED EMPLOYEE LAYOUT
+   Provides the permanent sidebar, top bar, and page-content
+   area used throughout the employee portal.
+   ========================================================= *@
+@inherits LayoutComponentBase
+
+<div class="employee-shell">
+
+    @* =====================================================
+       EMPLOYEE SIDEBAR
+       Contains the brand, employee navigation, and security
+       reminder card from the dashboard reference.
+       ===================================================== *@
+    <aside class="employee-sidebar">
+
+        @* Sidebar header containing the menu control and brand. *@
+        <div class="sidebar-header">
+
+            @* Visual menu button. Its open-and-close behaviour
+               will be added when we build responsiveness. *@
+            <button
+                class="sidebar-menu-button"
+                type="button"
+                aria-label="Open employee navigation">
+
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M4 6h16" />
+                    <path d="M4 12h16" />
+                    <path d="M4 18h16" />
+                </svg>
+            </button>
+
+            @* Secure Employee Portal brand. *@
+            <a class="sidebar-brand" href="/dashboard">
+
+                @* Shield-and-employee brand icon. *@
+                <span class="sidebar-brand-icon" aria-hidden="true">
+                    <svg viewBox="0 0 64 72">
+                        <defs>
+                            <linearGradient
+                                id="sidebarShieldGradient"
+                                x1="8"
+                                y1="6"
+                                x2="54"
+                                y2="66"
+                                gradientUnits="userSpaceOnUse">
+
+                                <stop offset="0%" stop-color="#55E1E6" />
+                                <stop offset="55%" stop-color="#2E92F5" />
+                                <stop offset="100%" stop-color="#2359E4" />
+                            </linearGradient>
+                        </defs>
+
+                        <path
+                            class="sidebar-shield-depth"
+                            d="M32 4 56 13v20c0 16-9 27-24 35C17 60 8 49 8 33V13L32 4Z" />
+
+                        <path
+                            class="sidebar-shield-outline"
+                            d="M32 4 56 13v20c0 16-9 27-24 35C17 60 8 49 8 33V13L32 4Z" />
+
+                        <circle
+                            class="sidebar-person-head"
+                            cx="32"
+                            cy="25"
+                            r="8" />
+
+                        <path
+                            class="sidebar-person-body"
+                            d="M19 51c1-10 6-15 13-15s12 5 13 15H19Z" />
+                    </svg>
+                </span>
+
+                @* Brand wording with the employee-portal gradient. *@
+                <span class="sidebar-brand-name">
+                    <span class="sidebar-brand-secure">Secure</span>
+                    <span class="sidebar-brand-gradient">Employee Portal</span>
+                </span>
+            </a>
+        </div>
+
+        @* =====================================================
+           EMPLOYEE NAVIGATION
+           These routes establish the future portal structure.
+           Home is active while the employee is on /dashboard.
+           ===================================================== *@
+        <nav class="sidebar-navigation" aria-label="Employee portal navigation">
+
+            @* Employee home dashboard. *@
+            <NavLink
+                class="sidebar-link"
+                ActiveClass="is-active"
+                Match="NavLinkMatch.All"
+                href="/dashboard">
+
+                <span class="sidebar-link-icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24">
+                        <path d="m3 11 9-8 9 8" />
+                        <path d="M5 10v10h14V10" />
+                        <path d="M9 20v-6h6v6" />
+                    </svg>
+                </span>
+
+                <span>Home</span>
+            </NavLink>
+
+            @* Employee profile. *@
+            <NavLink class="sidebar-link" ActiveClass="is-active" href="/profile">
+                <span class="sidebar-link-icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24">
+                        <circle cx="12" cy="7" r="4" />
+                        <path d="M5 21c0-5 2.7-8 7-8s7 3 7 8" />
+                    </svg>
+                </span>
+
+                <span>My Profile</span>
+            </NavLink>
+
+            @* Employee self-service area. *@
+            <NavLink class="sidebar-link" ActiveClass="is-active" href="/services">
+                <span class="sidebar-link-icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24">
+                        <rect x="3" y="7" width="18" height="13" rx="2" />
+                        <path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+                        <path d="M3 12h18" />
+                        <path d="M10 12v2h4v-2" />
+                    </svg>
+                </span>
+
+                <span>My Services</span>
+            </NavLink>
+
+            @* Employee tasks. *@
+            <NavLink class="sidebar-link" ActiveClass="is-active" href="/tasks">
+                <span class="sidebar-link-icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24">
+                        <rect x="4" y="3" width="16" height="18" rx="2" />
+                        <path d="m8 12 2.2 2.2L16 8.5" />
+                    </svg>
+                </span>
+
+                <span>Tasks</span>
+            </NavLink>
+
+            @* Time and attendance. *@
+            <NavLink class="sidebar-link" ActiveClass="is-active" href="/attendance">
+                <span class="sidebar-link-icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24">
+                        <circle cx="12" cy="12" r="9" />
+                        <path d="M12 7v5l3 2" />
+                    </svg>
+                </span>
+
+                <span>Time &amp; Attendance</span>
+            </NavLink>
+
+            @* Payroll and salary information. *@
+            <NavLink class="sidebar-link" ActiveClass="is-active" href="/payroll">
+                <span class="sidebar-link-icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24">
+                        <circle cx="12" cy="12" r="9" />
+                        <path d="M15 8.5c-.7-.7-1.6-1-2.8-1-1.7 0-2.7.8-2.7 2 0 3.2 5.7 1.5 5.7 5 0 1.2-1.1 2-2.9 2-1.3 0-2.4-.4-3.2-1.2" />
+                        <path d="M12 5.5v13" />
+                    </svg>
+                </span>
+
+                <span>Payroll</span>
+            </NavLink>
+
+            @* Employee documents. *@
+            <NavLink class="sidebar-link" ActiveClass="is-active" href="/documents">
+                <span class="sidebar-link-icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24">
+                        <path d="M6 3h8l4 4v14H6Z" />
+                        <path d="M14 3v5h5" />
+                        <path d="M9 13h6" />
+                        <path d="M9 17h6" />
+                    </svg>
+                </span>
+
+                <span>Document Center</span>
+            </NavLink>
+
+            @* Company employee directory. *@
+            <NavLink class="sidebar-link" ActiveClass="is-active" href="/directory">
+                <span class="sidebar-link-icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24">
+                        <circle cx="8" cy="8" r="3" />
+                        <circle cx="17" cy="9" r="2.5" />
+                        <path d="M2.5 20c.3-4.4 2.1-6.5 5.5-6.5s5.2 2.1 5.5 6.5" />
+                        <path d="M14 14.5c3.7-.5 6.5 1.2 7.5 5.5" />
+                    </svg>
+                </span>
+
+                <span>Directory</span>
+            </NavLink>
+
+            @* Learning and employee development. *@
+            <NavLink class="sidebar-link" ActiveClass="is-active" href="/learning">
+                <span class="sidebar-link-icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24">
+                        <path d="m3 9 9-5 9 5-9 5Z" />
+                        <path d="M7 12.5V17c3 2 7 2 10 0v-4.5" />
+                        <path d="M21 9v6" />
+                    </svg>
+                </span>
+
+                <span>Learning</span>
+            </NavLink>
+
+            @* Employee benefits. *@
+            <NavLink class="sidebar-link" ActiveClass="is-active" href="/benefits">
+                <span class="sidebar-link-icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24">
+                        <rect x="3" y="9" width="18" height="12" rx="1" />
+                        <path d="M12 9v12" />
+                        <path d="M3 13h18" />
+                        <path d="M12 9H8.5C6.5 9 5 8 5 6.5S6.2 4 7.8 4C10.2 4 12 9 12 9Z" />
+                        <path d="M12 9h3.5C17.5 9 19 8 19 6.5S17.8 4 16.2 4C13.8 4 12 9 12 9Z" />
+                    </svg>
+                </span>
+
+                <span>Benefits</span>
+            </NavLink>
+
+            @* Employee requests. *@
+            <NavLink class="sidebar-link" ActiveClass="is-active" href="/requests">
+                <span class="sidebar-link-icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24">
+                        <rect x="5" y="4" width="14" height="17" rx="2" />
+                        <path d="M9 4V2h6v2" />
+                        <path d="M9 10h6" />
+                        <path d="M9 14h6" />
+                        <path d="M9 18h4" />
+                    </svg>
+                </span>
+
+                <span>Requests</span>
+            </NavLink>
+
+            @* Employee reporting area. *@
+            <NavLink class="sidebar-link" ActiveClass="is-active" href="/reports">
+                <span class="sidebar-link-icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24">
+                        <path d="M4 20V10" />
+                        <path d="M10 20V4" />
+                        <path d="M16 20v-7" />
+                        <path d="M22 20H2" />
+                    </svg>
+                </span>
+
+                <span>Reports</span>
+            </NavLink>
+
+            @* Portal help and support. *@
+            <NavLink class="sidebar-link" ActiveClass="is-active" href="/support">
+                <span class="sidebar-link-icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24">
+                        <path d="M5 3h14v15H9l-4 3Z" />
+                        <path d="M9.5 8.5a2.7 2.7 0 0 1 5.1 1.2c0 2-2.6 2.1-2.6 4" />
+                        <path d="M12 17h.01" />
+                    </svg>
+                </span>
+
+                <span>Help &amp; Support</span>
+            </NavLink>
+        </nav>
+
+        @* =====================================================
+           SECURITY REMINDER CARD
+           Anchored at the bottom of the permanent sidebar.
+           ===================================================== *@
+        <section class="sidebar-security-card">
+
+            @* Security-card shield icon. *@
+            <span class="sidebar-security-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24">
+                    <path d="M12 3 20 6v6c0 5-2.9 8-8 10-5.1-2-8-5-8-10V6Z" />
+                    <path d="m9.5 12 1.7 1.7 3.7-4" />
+                </svg>
+            </span>
+
+            <strong>Your security matters</strong>
+
+            <p>
+                Keep your account secure and update your password regularly.
+            </p>
+
+            <a class="sidebar-security-link" href="/reset-password">
+                <span>Update now</span>
+                <span aria-hidden="true">→</span>
+            </a>
+        </section>
+    </aside>
+
+    @* =====================================================
+       EMPLOYEE WORKSPACE
+       The top bar and current authenticated page appear here.
+       ===================================================== *@
+    <section class="employee-workspace">
+
+        @* =========================================================
+   EMPLOYEE TOP NAVIGATION
+   Shared across every authenticated employee-portal page.
+   The controls are visual for now; their interactive
+   behaviour will be implemented later.
+   ========================================================= *@
+<header class="employee-topbar">
+
+    @* Keep all top-bar actions grouped on the right. *@
+    <div class="employee-topbar-actions">
+
+        @* Help assistant action from the dashboard reference. *@
+        <button
+            class="topbar-help-button"
+            type="button"
+            aria-label="Open employee help">
+
+          @* =========================================================
+   TOP-BAR HR ASSISTANT IMAGE
+   Replaces the temporary line icon without changing the
+   existing Need help button or its layout.
+   ========================================================= *@
+<span class="topbar-help-icon" aria-hidden="true">
+    <img
+        src="images/hr-assistant-icon.svg"
+        alt="" />
+</span>
+
+            <span>Need help?</span>
+        </button>
+
+        @* Notification control with the current unread count. *@
+        <button
+            class="topbar-notification-button"
+            type="button"
+            aria-label="Open notifications">
+
+            @* Notification bell icon. *@
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M6 17h12" />
+                <path d="M8 17V10a4 4 0 0 1 8 0v7" />
+                <path d="M10 20h4" />
+                <path d="M5 17c1.3-1.2 2-2.8 2-4.6" />
+                <path d="M19 17c-1.3-1.2-2-2.8-2-4.6" />
+            </svg>
+
+            @* Temporary unread-notification count. *@
+            <span class="topbar-notification-count">3</span>
+        </button>
+
+        @* Employee-profile control. *@
+        <button
+            class="topbar-profile-button"
+            type="button"
+            aria-label="Open employee profile menu">
+
+            @* =========================================================
+   EMPLOYEE PROFILE PHOTOGRAPH
+   Replaces the temporary initials while preserving the
+   existing profile control and top-bar layout.
+   ========================================================= *@
+<img
+    class="topbar-avatar-image"
+    src="images/nongcebo-buthelezi.png"
+    alt="Profile photograph of Nongcebo Buthelezi" />
+
+            @* Authenticated employee’s full name. *@
+            <span class="topbar-profile-name">
+                Nongcebo Buthelezi
+            </span>
+
+            @* Profile-menu dropdown indicator. *@
+            <span class="topbar-profile-chevron" aria-hidden="true">
+                <svg viewBox="0 0 24 24">
+                    <path d="m8 10 4 4 4-4" />
+                </svg>
+            </span>
+        </button>
+    </div>
+</header>
+
+        @* The selected authenticated page is rendered here. *@
+        <main class="employee-content">
+            @Body
+        </main>
+    </section>
+</div>

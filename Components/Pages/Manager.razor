@@ -1,0 +1,56 @@
+@* Narrow manager experience used to demonstrate a middle authorisation level. *@
+@page "/manager"
+@layout EmployeeLayout
+@rendermode InteractiveServer
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Identity
+@using Microsoft.EntityFrameworkCore
+@using SecureEmployeePortal.Data
+@attribute [Authorize(Roles = "Manager,Administrator")]
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject UserManager<ApplicationUser> UserManager
+
+<PageTitle>Manager Overview | Secure Employee Portal</PageTitle>
+
+<section class="portal-page">
+    <header class="portal-page-header">
+        <div><p class="eyebrow">Manager access</p><h1>My Team</h1><p>A deliberately limited manager view of employees in your department. Manager access does not grant security-administrator privileges.</p></div>
+    </header>
+
+    <article class="portal-card">
+        <div class="portal-card-heading"><div><p class="eyebrow">@Department</p><h2>Department employees</h2></div><span class="portal-status-badge">@Team.Count employees</span></div>
+        @if (Team.Count == 0)
+        {
+            <div class="portal-empty-state">No other employee accounts are assigned to this department.</div>
+        }
+        else
+        {
+            <div class="portal-table-wrap"><table class="portal-table"><thead><tr><th>Name</th><th>Job title</th><th>Department</th><th>Account status</th></tr></thead><tbody>
+            @foreach (var user in Team)
+            {
+                <tr><td><strong>@user.FullName</strong></td><td>@user.JobTitle</td><td>@user.Department</td><td><span class="request-status @user.AccountStatus.ToString().ToLowerInvariant()">@user.AccountStatus</span></td></tr>
+            }
+            </tbody></table></div>
+        }
+    </article>
+
+    <div class="portal-warning-message portal-section-space">Managers can view this limited team information, but cannot assign roles, suspend arbitrary accounts, or inspect system-wide audit logs.</div>
+</section>
+
+@code {
+    private string Department { get; set; } = "Department";
+    private List<ApplicationUser> Team { get; set; } = [];
+
+    protected override async Task OnInitializedAsync()
+    {
+        var state = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        var current = await UserManager.GetUserAsync(state.User);
+        if (current is null) return;
+        Department = current.Department;
+        Team = await UserManager.Users.AsNoTracking()
+            .Where(x => x.Department == current.Department && x.Id != current.Id)
+            .OrderBy(x => x.FirstName)
+            .ThenBy(x => x.LastName)
+            .ToListAsync();
+    }
+}

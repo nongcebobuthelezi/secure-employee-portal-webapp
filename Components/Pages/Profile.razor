@@ -1,0 +1,211 @@
+@* Database-backed employee self-service profile. *@
+@page "/profile"
+@layout EmployeeLayout
+@rendermode InteractiveServer
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Identity
+@using SecureEmployeePortal.Data
+@using SecureEmployeePortal.Models
+@attribute [Authorize]
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject UserManager<ApplicationUser> UserManager
+@inject SecureEmployeePortal.Services.PortalActivityService ActivityService
+@inject SecureEmployeePortal.Services.PortalAuthorizationService AuthorizationService
+
+<PageTitle>My Profile | Secure Employee Portal</PageTitle>
+
+<section class="portal-page">
+    <header class="portal-page-header">
+        <div>
+            <p class="eyebrow">Employee self-service</p>
+            <h1>My Profile</h1>
+            <p>Review your employee identity and update only the personal information you are allowed to manage.</p>
+        </div>
+    </header>
+
+    @if (CurrentUser is null)
+    {
+        <div class="portal-state-card">Loading your profile…</div>
+    }
+    else
+    {
+        @* A strong identity header mirrors the visual hierarchy of the MyNIF profile reference
+           while keeping this application focused on account and access management. *@
+        <article class="portal-card profile-identity-card">
+            <div class="profile-avatar-large" aria-hidden="true">@Initials</div>
+            <div class="profile-identity-copy">
+                <h2>@CurrentUser.FullName</h2>
+                <p>@CurrentUser.JobTitle · @CurrentUser.Department</p>
+                <div class="profile-identity-meta">
+                    <span class="profile-role-badge">@CurrentRole</span>
+                    <span class="portal-status-badge">@CurrentUser.AccountStatus</span>
+                    <span class="profile-employee-number">@CurrentUser.EmployeeNumber</span>
+                </div>
+            </div>
+        </article>
+
+        <div class="portal-grid portal-grid-two">
+            <article class="portal-card">
+                <div class="portal-card-heading">
+                    <div>
+                        <p class="eyebrow">Editable information</p>
+                        <h2>Personal details</h2>
+                    </div>
+                </div>
+
+                @if (!string.IsNullOrWhiteSpace(StatusMessage))
+                {
+                    <div class="@(SaveSucceeded ? "portal-success-message" : "portal-error-message")" role="status">@StatusMessage</div>
+                }
+
+                <EditForm Model="Input" OnValidSubmit="SaveProfileAsync" FormName="profile">
+                    <DataAnnotationsValidator />
+                    <div class="portal-form-grid">
+                        <label>
+                            <span>First name</span>
+                            <InputText @bind-Value="Input.FirstName" autocomplete="given-name" maxlength="100" />
+                            <ValidationMessage For="() => Input.FirstName" />
+                        </label>
+                        <label>
+                            <span>Last name</span>
+                            <InputText @bind-Value="Input.LastName" autocomplete="family-name" maxlength="100" />
+                            <ValidationMessage For="() => Input.LastName" />
+                        </label>
+                        <label class="portal-form-full">
+                            <span>Phone number</span>
+                            <InputText @bind-Value="Input.PhoneNumber" autocomplete="tel" maxlength="40" placeholder="Optional" />
+                            <ValidationMessage For="() => Input.PhoneNumber" />
+                        </label>
+                    </div>
+                    <p class="portal-form-note">Your role, department, job title, employee number and account status are protected organisational fields.</p>
+                    <button class="portal-primary-button" type="submit" disabled="@IsSaving">@(IsSaving ? "Saving…" : "Save changes")</button>
+                </EditForm>
+            </article>
+
+            <article class="portal-card profile-readonly-card">
+                <div class="portal-card-heading">
+                    <div>
+                        <p class="eyebrow">Protected account information</p>
+                        <h2>Work &amp; account details</h2>
+                    </div>
+                </div>
+                <dl class="portal-detail-list">
+                    <div><dt>Work email</dt><dd>@CurrentUser.Email</dd></div>
+                    <div><dt>Employee number</dt><dd>@CurrentUser.EmployeeNumber</dd></div>
+                    <div><dt>Department</dt><dd>@CurrentUser.Department</dd></div>
+                    <div><dt>Job title</dt><dd>@CurrentUser.JobTitle</dd></div>
+                    <div><dt>Role</dt><dd>@CurrentRole</dd></div>
+                    <div><dt>Account created</dt><dd>@CurrentUser.CreatedAt.ToLocalTime().ToString("dd MMM yyyy")</dd></div>
+                    <div><dt>Last sign-in</dt><dd>@FormatDate(CurrentUser.LastLoginAt)</dd></div>
+                </dl>
+            </article>
+        </div>
+    }
+</section>
+
+@code {
+    private ApplicationUser? CurrentUser { get; set; }
+    private ProfileInputModel Input { get; set; } = new();
+    private string CurrentRole { get; set; } = "Employee";
+    private string? StatusMessage { get; set; }
+    private bool SaveSucceeded { get; set; }
+    private bool IsSaving { get; set; }
+
+    private string Initials
+    {
+        get
+        {
+            if (CurrentUser is null) return "EP";
+
+            var first = string.IsNullOrWhiteSpace(CurrentUser.FirstName) ? string.Empty : CurrentUser.FirstName[..1];
+            var last = string.IsNullOrWhiteSpace(CurrentUser.LastName) ? string.Empty : CurrentUser.LastName[..1];
+            var initials = $"{first}{last}".ToUpperInvariant();
+            return string.IsNullOrWhiteSpace(initials) ? "EP" : initials;
+        }
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        var state = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        CurrentUser = await UserManager.GetUserAsync(state.User);
+        if (CurrentUser is null) return;
+
+        CurrentRole = (await UserManager.GetRolesAsync(CurrentUser)).FirstOrDefault() ?? "Employee";
+        Input = new ProfileInputModel
+        {
+            FirstName = CurrentUser.FirstName,
+            LastName = CurrentUser.LastName,
+            PhoneNumber = CurrentUser.PhoneNumber
+        };
+    }
+
+    private async Task SaveProfileAsync()
+    {
+        if (CurrentUser is null || IsSaving)
+        {
+            return;
+        }
+
+        IsSaving = true;
+        StatusMessage = null;
+
+        try
+        {
+            if (!await AuthorizationService.IsActiveUserAsync(CurrentUser.Id))
+            {
+                SaveSucceeded = false;
+                StatusMessage = "Your account is no longer active. Sign in again or contact an administrator before changing profile information.";
+                return;
+            }
+
+            // Keep a copy of the persisted values before mutating the tracked Identity user.
+            // If the database update fails, restore the component state so the page never
+            // claims to display values that were not actually saved.
+            var previousFirstName = CurrentUser.FirstName;
+            var previousLastName = CurrentUser.LastName;
+            var previousPhoneNumber = CurrentUser.PhoneNumber;
+            var previousPhoneNumberConfirmed = CurrentUser.PhoneNumberConfirmed;
+
+            CurrentUser.FirstName = Input.FirstName.Trim();
+            CurrentUser.LastName = Input.LastName.Trim();
+
+            var newPhoneNumber = string.IsNullOrWhiteSpace(Input.PhoneNumber) ? null : Input.PhoneNumber.Trim();
+            if (!string.Equals(CurrentUser.PhoneNumber, newPhoneNumber, StringComparison.Ordinal))
+            {
+                CurrentUser.PhoneNumber = newPhoneNumber;
+                // Never carry a confirmation flag from an old number onto a newly edited one.
+                CurrentUser.PhoneNumberConfirmed = false;
+            }
+
+            var result = await UserManager.UpdateAsync(CurrentUser);
+            SaveSucceeded = result.Succeeded;
+            StatusMessage = result.Succeeded
+                ? "Your permitted profile information has been updated."
+                : "We couldn't update your profile. Check the highlighted fields and try again.";
+
+            if (result.Succeeded)
+            {
+                await ActivityService.RecordAuditAsync(
+                    CurrentUser.Id,
+                    CurrentUser.Id,
+                    "ProfileUpdated",
+                    "Permitted profile fields",
+                    "Permitted profile fields updated");
+            }
+            else
+            {
+                CurrentUser.FirstName = previousFirstName;
+                CurrentUser.LastName = previousLastName;
+                CurrentUser.PhoneNumber = previousPhoneNumber;
+                CurrentUser.PhoneNumberConfirmed = previousPhoneNumberConfirmed;
+            }
+        }
+        finally
+        {
+            IsSaving = false;
+        }
+    }
+
+    private static string FormatDate(DateTimeOffset? value) =>
+        value?.ToLocalTime().ToString("dd MMM yyyy, HH:mm") ?? "Not recorded yet";
+}

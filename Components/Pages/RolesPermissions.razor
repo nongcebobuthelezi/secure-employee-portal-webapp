@@ -1,0 +1,63 @@
+@* Readable role-and-permission matrix for the permissions enforced by the final scoped portal. *@
+@page "/admin/roles"
+@layout EmployeeLayout
+@using Microsoft.AspNetCore.Authorization
+@attribute [Authorize(Roles = "Administrator")]
+
+<PageTitle>Roles & Permissions | Secure Employee Portal</PageTitle>
+
+<section class="portal-page">
+    <header class="portal-page-header">
+        <div>
+            <p class="eyebrow">Access control</p>
+            <h1>Roles &amp; Permissions</h1>
+            <p>The portal uses fixed application roles so access stays understandable, testable and enforceable on the server.</p>
+        </div>
+        <a class="portal-secondary-link" href="/admin">Back to admin</a>
+    </header>
+
+    <div class="portal-grid portal-grid-three">
+        <article class="portal-card permission-card">
+            <p class="eyebrow">Default role</p><h2>Employee</h2>
+            <ul class="permission-list">
+                <li>Sign in and access the protected dashboard</li>
+                <li>View and edit permitted profile fields</li>
+                <li>Change their own password</li>
+                <li>Review security activity linked to their own account</li>
+                <li>Clock in/out and review only their own attendance</li>
+                <li>Submit and track their own access requests</li>
+                <li>No access to administrator account controls</li>
+            </ul>
+        </article>
+
+        <article class="portal-card permission-card">
+            <p class="eyebrow">Limited elevated access</p><h2>Manager</h2>
+            <ul class="permission-list">
+                <li>All current Employee permissions</li>
+                <li>View a limited employee list for their own department</li>
+                <li>No role assignment</li>
+                <li>No account suspension or activation</li>
+                <li>No system-wide security administration</li>
+            </ul>
+        </article>
+
+        <article class="portal-card permission-card">
+            <p class="eyebrow">Privileged role</p><h2>Administrator</h2>
+            <ul class="permission-list">
+                <li>All current Employee permissions</li>
+                <li>Create and inspect employee accounts</li>
+                <li>Activate, restore, suspend and disable accounts</li>
+                <li>Assign and change Employee, Manager and Administrator roles</li>
+                <li>Review employee access requests</li>
+                <li>Inspect security events and audit logs</li>
+                <li>Access protected security-administration pages</li>
+            </ul>
+        </article>
+    </div>
+
+    <article class="portal-card portal-section-space">
+        <p class="eyebrow">Security rule</p>
+        <h2>Visibility is not security</h2>
+        <p class="portal-muted">The interface hides controls that do not belong to a role, but protected pages and actions are also guarded by ASP.NET Core authorisation. Typing an administrator URL does not grant administrator permissions.</p>
+    </article>
+</section>

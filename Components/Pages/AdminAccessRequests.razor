@@ -1,0 +1,206 @@
+@* Administrator workflow for reviewing employee access requests with confirmation and auditability. *@
+@page "/admin/access-requests"
+@layout EmployeeLayout
+@rendermode InteractiveServer
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Identity
+@using Microsoft.EntityFrameworkCore
+@using SecureEmployeePortal.Data
+@using SecureEmployeePortal.Data.Entities
+@using SecureEmployeePortal.Services
+@attribute [Authorize(Roles = "Administrator")]
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject UserManager<ApplicationUser> UserManager
+@inject AccessRequestService AccessRequestService
+
+<PageTitle>Access Request Review | Secure Employee Portal</PageTitle>
+
+<section class="portal-page">
+    <header class="portal-page-header">
+        <div>
+            <p class="eyebrow">Administrator only</p>
+            <h1>Access Request Review</h1>
+            <p>Review employee requests for protected resources. Every decision is recorded as an administrator audit action.</p>
+        </div>
+        <a class="portal-secondary-link" href="/admin">Back to admin</a>
+    </header>
+
+    <div class="portal-grid portal-grid-three">
+        <article class="portal-card metric-card"><span>Pending</span><strong>@Rows.Count(row => row.Request.Status == AccessRequestRules.Pending)</strong></article>
+        <article class="portal-card metric-card"><span>Approved</span><strong>@Rows.Count(row => row.Request.Status == AccessRequestRules.Approved)</strong></article>
+        <article class="portal-card metric-card"><span>Rejected</span><strong>@Rows.Count(row => row.Request.Status == AccessRequestRules.Rejected)</strong></article>
+    </div>
+
+    @if (!string.IsNullOrWhiteSpace(StatusMessage))
+    {
+        <div class="@(ActionSucceeded ? "portal-success-message" : "portal-error-message") portal-section-space" role="status">@StatusMessage</div>
+    }
+
+    <article class="portal-card portal-section-space">
+        <div class="admin-filter-row">
+            <label class="portal-search-field">
+                <span>Search</span>
+                <input @bind="SearchTerm" @bind:event="oninput" placeholder="Employee, resource or reason" />
+            </label>
+            <label>
+                <span>Status</span>
+                <select @bind="StatusFilter">
+                    <option value="">All statuses</option>
+                    <option value="@AccessRequestRules.Pending">Pending</option>
+                    <option value="@AccessRequestRules.Approved">Approved</option>
+                    <option value="@AccessRequestRules.Rejected">Rejected</option>
+                </select>
+            </label>
+        </div>
+
+        @if (!Loaded)
+        {
+            <div class="portal-state-card">Loading access requests…</div>
+        }
+        else if (FilteredRows.Count == 0)
+        {
+            <div class="portal-empty-state">No access requests match the current filters.</div>
+        }
+        else
+        {
+            <div class="portal-request-stack">
+                @foreach (var row in FilteredRows)
+                {
+                    <article class="access-request-review-card">
+                        <div class="portal-card-heading">
+                            <div>
+                                <p class="eyebrow">@row.Request.RequestedAt.ToLocalTime().ToString("dd MMM yyyy HH:mm")</p>
+                                <h2>@row.Request.RequestedResource</h2>
+                                <p class="portal-muted"><strong>@row.RequesterLabel</strong> — @row.Request.Reason</p>
+                            </div>
+                            <span class="request-status @row.Request.Status.ToLowerInvariant()">@row.Request.Status</span>
+                        </div>
+
+                        @if (row.Request.Status == AccessRequestRules.Pending)
+                        {
+                            @if (!CanCurrentReviewerReview(row))
+                            {
+                                <div class="portal-warning-message">You cannot approve or reject an access request submitted by your own account.</div>
+                            }
+                            <div class="request-decision-row">
+                                <input value="@GetDecisionNote(row.Request.Id)" @oninput="eventArgs => SetDecisionNote(row.Request.Id, eventArgs.Value?.ToString())" placeholder="Optional decision note" maxlength="1000" aria-label="Decision note for @row.Request.RequestedResource" disabled="@(!CanCurrentReviewerReview(row))" />
+                                <button class="portal-primary-button" type="button" disabled="@(IsBusy || !CanCurrentReviewerReview(row))" @onclick="() => RequestDecision(row.Request.Id, AccessRequestRules.Approved)">Approve</button>
+                                <button class="portal-danger-button" type="button" disabled="@(IsBusy || !CanCurrentReviewerReview(row))" @onclick="() => RequestDecision(row.Request.Id, AccessRequestRules.Rejected)">Reject</button>
+                            </div>
+                        }
+                        else
+                        {
+                            <dl class="portal-detail-list compact-detail-list">
+                                <div><dt>Reviewed</dt><dd>@(row.Request.ReviewedAt?.ToLocalTime().ToString("dd MMM yyyy HH:mm") ?? "—")</dd></div>
+                                <div><dt>Reviewer</dt><dd>@row.ReviewerLabel</dd></div>
+                                <div><dt>Decision note</dt><dd>@(string.IsNullOrWhiteSpace(row.Request.DecisionNote) ? "—" : row.Request.DecisionNote)</dd></div>
+                            </dl>
+                        }
+
+                        @if (PendingRequestId == row.Request.Id)
+                        {
+                            <div class="portal-confirmation-panel" role="alert">
+                                <strong>Confirm access decision</strong>
+                                <p>@(PendingDecision == AccessRequestRules.Approved
+                                    ? $"Approve access to {row.Request.RequestedResource} for {row.RequesterLabel}?"
+                                    : $"Reject access to {row.Request.RequestedResource} for {row.RequesterLabel}?")</p>
+                                <div class="portal-header-actions">
+                                    <button class="portal-secondary-button" type="button" disabled="@IsBusy" @onclick="CancelDecision">Cancel</button>
+                                    <button class="@(PendingDecision == AccessRequestRules.Approved ? "portal-primary-button" : "portal-danger-button")" type="button" disabled="@IsBusy" @onclick="ConfirmDecisionAsync">@(IsBusy ? "Saving…" : "Confirm decision")</button>
+                                </div>
+                            </div>
+                        }
+                    </article>
+                }
+            </div>
+        }
+    </article>
+</section>
+
+@code {
+    private ApplicationUser? Reviewer { get; set; }
+    private List<RequestRow> Rows { get; set; } = [];
+    private Dictionary<int, string> DecisionNotes { get; set; } = [];
+    private string SearchTerm { get; set; } = string.Empty;
+    private string StatusFilter { get; set; } = AccessRequestRules.Pending;
+    private int? PendingRequestId { get; set; }
+    private string? PendingDecision { get; set; }
+    private string? StatusMessage { get; set; }
+    private bool ActionSucceeded { get; set; }
+    private bool Loaded { get; set; }
+    private bool IsBusy { get; set; }
+
+    private List<RequestRow> FilteredRows => Rows
+        .Where(row => string.IsNullOrWhiteSpace(StatusFilter) || row.Request.Status == StatusFilter)
+        .Where(row => string.IsNullOrWhiteSpace(SearchTerm)
+            || row.RequesterLabel.Contains(SearchTerm, StringComparison.OrdinalIgnoreCase)
+            || row.Request.RequestedResource.Contains(SearchTerm, StringComparison.OrdinalIgnoreCase)
+            || row.Request.Reason.Contains(SearchTerm, StringComparison.OrdinalIgnoreCase))
+        .ToList();
+
+    protected override async Task OnInitializedAsync()
+    {
+        var state = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        Reviewer = await UserManager.GetUserAsync(state.User);
+        await ReloadAsync();
+        Loaded = true;
+    }
+
+    private void RequestDecision(int requestId, string decision)
+    {
+        PendingRequestId = requestId;
+        PendingDecision = decision;
+        StatusMessage = null;
+    }
+
+    private void CancelDecision()
+    {
+        PendingRequestId = null;
+        PendingDecision = null;
+    }
+
+    private async Task ConfirmDecisionAsync()
+    {
+        if (Reviewer is null || PendingRequestId is null || string.IsNullOrWhiteSpace(PendingDecision) || IsBusy) return;
+        IsBusy = true;
+        try
+        {
+            var note = GetDecisionNote(PendingRequestId.Value);
+            var result = await AccessRequestService.ReviewAsync(PendingRequestId.Value, Reviewer.Id, PendingDecision, note);
+            ActionSucceeded = result.Success;
+            StatusMessage = result.Message;
+            CancelDecision();
+            await ReloadAsync();
+        }
+        finally
+        {
+            IsBusy = false;
+        }
+    }
+
+    private async Task ReloadAsync()
+    {
+        var requests = (await AccessRequestService.GetAllAsync()).ToList();
+        var userIds = requests.SelectMany(request => new[] { request.RequesterUserId, request.ReviewerUserId })
+            .Where(id => !string.IsNullOrWhiteSpace(id))
+            .Distinct()
+            .ToList();
+        var users = await UserManager.Users
+            .Where(user => userIds.Contains(user.Id))
+            .AsNoTracking()
+            .ToDictionaryAsync(user => user.Id, user => string.IsNullOrWhiteSpace(user.FullName) ? user.Email ?? user.Id : $"{user.FullName} ({user.Email})");
+
+        string Label(string? id) => !string.IsNullOrWhiteSpace(id) && users.TryGetValue(id, out var value) ? value : "—";
+        Rows = requests.Select(request => new RequestRow(request, Label(request.RequesterUserId), Label(request.ReviewerUserId))).ToList();
+    }
+
+
+    private bool CanCurrentReviewerReview(RequestRow row) =>
+        Reviewer is not null && AccessRequestRules.MayReviewerReview(Reviewer.Id, row.Request.RequesterUserId);
+
+    private string GetDecisionNote(int requestId) => DecisionNotes.TryGetValue(requestId, out var value) ? value : string.Empty;
+
+    private void SetDecisionNote(int requestId, string? value) => DecisionNotes[requestId] = value ?? string.Empty;
+
+    private sealed record RequestRow(AccessRequest Request, string RequesterLabel, string ReviewerLabel);
+}

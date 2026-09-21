@@ -1,0 +1,191 @@
+@* Database-backed employee attendance and clocking experience. *@
+@page "/attendance"
+@layout EmployeeLayout
+@rendermode InteractiveServer
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Identity
+@using SecureEmployeePortal.Data
+@using SecureEmployeePortal.Data.Entities
+@using SecureEmployeePortal.Services
+@attribute [Authorize]
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject UserManager<ApplicationUser> UserManager
+@inject AttendanceService AttendanceService
+
+<PageTitle>My Attendance | Secure Employee Portal</PageTitle>
+
+<section class="portal-page">
+    <header class="portal-page-header">
+        <div>
+            <p class="eyebrow">Protected employee workflow</p>
+            <h1>My Attendance</h1>
+            <p>Clock yourself in or out and review attendance records stored against your authenticated employee account.</p>
+        </div>
+        <a class="portal-secondary-link" href="/dashboard">Back to dashboard</a>
+    </header>
+
+    @if (!Loaded)
+    {
+        <div class="portal-state-card" role="status">Loading your attendance…</div>
+    }
+    else if (CurrentUser is null || Snapshot is null)
+    {
+        <div class="portal-error-message" role="alert">Your signed-in employee account could not be loaded.</div>
+    }
+    else
+    {
+        <div class="portal-grid portal-grid-three">
+            <article class="portal-card metric-card">
+                <span>Current status</span>
+                <strong>@(Snapshot.OpenRecord is null ? "Clocked out" : "Clocked in")</strong>
+            </article>
+            <article class="portal-card metric-card">
+                <span>Today</span>
+                <strong>@FormatDuration(Snapshot.TodayMinutes)</strong>
+            </article>
+            <article class="portal-card metric-card">
+                <span>This week</span>
+                <strong>@Snapshot.DaysPresentThisWeek day@(Snapshot.DaysPresentThisWeek == 1 ? string.Empty : "s")</strong>
+            </article>
+        </div>
+
+        <article class="portal-card attendance-action-card portal-section-space">
+            <div>
+                <p class="eyebrow">Current session</p>
+                <h2>@(Snapshot.OpenRecord is null ? "Ready to clock in" : $"Clocked in at {FormatTime(Snapshot.OpenRecord.ClockInAt)}")</h2>
+                <p class="portal-muted">
+                    @(Snapshot.OpenRecord is null
+                        ? "Only your authenticated account can create your attendance record."
+                        : $"Your current session has been open for {FormatOpenDuration(Snapshot.OpenRecord.ClockInAt)}.")
+                </p>
+            </div>
+            <div class="portal-header-actions">
+                @if (Snapshot.OpenRecord is null)
+                {
+                    <button class="portal-primary-button" type="button" disabled="@IsBusy" @onclick="ClockInAsync">@(IsBusy ? "Saving…" : "Clock in")</button>
+                }
+                else
+                {
+                    <button class="portal-danger-button" type="button" disabled="@IsBusy" @onclick="ClockOutAsync">@(IsBusy ? "Saving…" : "Clock out")</button>
+                }
+            </div>
+        </article>
+
+        @if (!string.IsNullOrWhiteSpace(StatusMessage))
+        {
+            <div class="@(ActionSucceeded ? "portal-success-message" : "portal-error-message")" role="status">@StatusMessage</div>
+        }
+
+        <article class="portal-card portal-section-space">
+            <div class="portal-card-heading">
+                <div>
+                    <p class="eyebrow">Your records only</p>
+                    <h2>Recent attendance</h2>
+                </div>
+                <span class="portal-status-badge">@FormatDuration(Snapshot.TotalMinutesThisWeek) this week</span>
+            </div>
+
+            @if (Snapshot.History.Count == 0)
+            {
+                <div class="portal-empty-state">No attendance records have been created yet.</div>
+            }
+            else
+            {
+                <div class="portal-table-wrap">
+                    <table class="portal-table">
+                        <thead>
+                            <tr><th>Date</th><th>Clock in</th><th>Clock out</th><th>Duration</th><th>Status</th></tr>
+                        </thead>
+                        <tbody>
+                        @foreach (var record in Snapshot.History)
+                        {
+                            <tr>
+                                <td>@record.ClockInAt.ToLocalTime().ToString("dd MMM yyyy")</td>
+                                <td>@record.ClockInAt.ToLocalTime().ToString("HH:mm")</td>
+                                <td>@(record.ClockOutAt?.ToLocalTime().ToString("HH:mm") ?? "—")</td>
+                                <td>@FormatRecordDuration(record)</td>
+                                <td><span class="clock-status @(record.ClockOutAt is null ? "on" : "off")">@(record.ClockOutAt is null ? "Open" : "Complete")</span></td>
+                            </tr>
+                        }
+                        </tbody>
+                    </table>
+                </div>
+            }
+        </article>
+    }
+</section>
+
+@code {
+    private ApplicationUser? CurrentUser { get; set; }
+    private AttendanceSnapshot? Snapshot { get; set; }
+    private bool Loaded { get; set; }
+    private bool IsBusy { get; set; }
+    private bool ActionSucceeded { get; set; }
+    private string? StatusMessage { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        var state = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        CurrentUser = await UserManager.GetUserAsync(state.User);
+        await ReloadAsync();
+        Loaded = true;
+    }
+
+    private async Task ClockInAsync()
+    {
+        if (CurrentUser is null || IsBusy) return;
+        IsBusy = true;
+        try
+        {
+            var result = await AttendanceService.ClockInAsync(CurrentUser.Id);
+            ActionSucceeded = result.Success;
+            StatusMessage = result.Message;
+            await ReloadAsync();
+        }
+        finally
+        {
+            IsBusy = false;
+        }
+    }
+
+    private async Task ClockOutAsync()
+    {
+        if (CurrentUser is null || IsBusy) return;
+        IsBusy = true;
+        try
+        {
+            var result = await AttendanceService.ClockOutAsync(CurrentUser.Id);
+            ActionSucceeded = result.Success;
+            StatusMessage = result.Message;
+            await ReloadAsync();
+        }
+        finally
+        {
+            IsBusy = false;
+        }
+    }
+
+    private async Task ReloadAsync()
+    {
+        Snapshot = CurrentUser is null ? null : await AttendanceService.GetSnapshotAsync(CurrentUser.Id, 30);
+    }
+
+    private static string FormatDuration(int minutes) => $"{minutes / 60:00}:{minutes % 60:00}";
+
+    private static string FormatTime(DateTimeOffset value) => value.ToLocalTime().ToString("HH:mm");
+
+    private static string FormatOpenDuration(DateTimeOffset clockIn)
+    {
+        var minutes = Math.Max(0, AttendanceRules.CalculateWorkedMinutes(clockIn, DateTimeOffset.UtcNow));
+        return FormatDuration(minutes);
+    }
+
+    private static string FormatRecordDuration(AttendanceRecord record)
+    {
+        var minutes = record.TotalMinutes
+            ?? (record.ClockOutAt is null
+                ? Math.Max(0, AttendanceRules.CalculateWorkedMinutes(record.ClockInAt, DateTimeOffset.UtcNow))
+                : AttendanceRules.CalculateWorkedMinutes(record.ClockInAt, record.ClockOutAt.Value));
+        return FormatDuration(minutes);
+    }
+}
