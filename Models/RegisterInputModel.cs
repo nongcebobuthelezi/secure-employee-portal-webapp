@@ -1,4 +1,4 @@
-// Defines the temporary information submitted through
+// Defines the account information submitted through
 // the Secure Employee Portal registration form.
 using System.ComponentModel.DataAnnotations;
 
@@ -30,6 +30,7 @@ public sealed class RegisterInputModel
     // Collects and validates the employee's work email address.
     [Required(ErrorMessage = "Work email is required.")]
     [EmailAddress(ErrorMessage = "Enter a valid work email address.")]
+    [StringLength(256, ErrorMessage = "Work email cannot exceed 256 characters.")]
     [Display(Name = "Work email")]
     public string WorkEmail { get; set; } = string.Empty;
 
@@ -49,6 +50,7 @@ public sealed class RegisterInputModel
     [Compare(
         nameof(Password),
         ErrorMessage = "The passwords do not match.")]
+    [StringLength(100)]
     [Display(Name = "Confirm password")]
     public string ConfirmPassword { get; set; } = string.Empty;
 
@@ -58,6 +60,6 @@ public sealed class RegisterInputModel
         typeof(bool),
         "true",
         "true",
-        ErrorMessage = "You must accept the Terms of Service and Privacy Policy.")]
+        ErrorMessage = "You must accept the portal acceptable-use and privacy requirements.")]
     public bool AcceptTerms { get; set; }
 }

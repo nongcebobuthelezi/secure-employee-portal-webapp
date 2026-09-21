@@ -1,100 +1,155 @@
-// Configures the Secure Employee Portal application,
-// database connection, Identity services, and request pipeline.
-using Microsoft.AspNetCore.Components.Authorization;
+// Configures the Secure Employee Portal application, security, data, and request pipeline.
+using Microsoft.AspNetCore.Antiforgery;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using SecureEmployeePortal.Components;
 using SecureEmployeePortal.Data;
+using SecureEmployeePortal.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Read the SQL Server LocalDB address from appsettings.json.
-// Stop with a clear message if the connection string is missing.
 var connectionString =
     builder.Configuration.GetConnectionString("DefaultConnection")
-    ?? throw new InvalidOperationException(
-        "Connection string 'DefaultConnection' was not found.");
+    ?? throw new InvalidOperationException("Connection string 'DefaultConnection' was not found.");
 
-// Register ApplicationDbContext as the gateway between
-// Entity Framework Core and SQL Server LocalDB.
-builder.Services.AddDbContext<ApplicationDbContext>(options =>
+// LocalDB is intentionally a Windows-development dependency. A hosted build must
+// receive a real SQL Server/Azure SQL connection string through secure configuration.
+if (!builder.Environment.IsDevelopment()
+    && connectionString.Contains("(localdb)", StringComparison.OrdinalIgnoreCase))
+{
+    throw new InvalidOperationException(
+        "A hosted environment must supply ConnectionStrings__DefaultConnection; LocalDB is development-only.");
+}
+
+builder.Services.AddDbContextFactory<ApplicationDbContext>(options =>
     options.UseSqlServer(connectionString));
 
-// Register ASP.NET Core Identity for employee accounts and roles.
-// Identity stores its users, roles, tokens, and security information
-// through the ApplicationDbContext configured above.
 builder.Services
     .AddIdentity<ApplicationUser, IdentityRole>(options =>
     {
-        // Prevent two employee accounts from sharing one email address.
         options.User.RequireUniqueEmail = true;
-
-        // Email confirmation remains disabled until the portal has
-        // a genuine email-delivery service.
         options.SignIn.RequireConfirmedAccount = false;
 
-        // Keep the backend password policy aligned with the
-        // requirements displayed on the Registration page.
         options.Password.RequiredLength = 8;
         options.Password.RequireUppercase = true;
-        options.Password.RequireLowercase = false;
+        options.Password.RequireLowercase = true;
         options.Password.RequireDigit = true;
         options.Password.RequireNonAlphanumeric = true;
 
-        // Temporarily lock an account after repeated failed attempts.
         options.Lockout.AllowedForNewUsers = true;
         options.Lockout.MaxFailedAccessAttempts = 5;
-        options.Lockout.DefaultLockoutTimeSpan =
-            TimeSpan.FromMinutes(15);
+        options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(15);
     })
-    // Store Identity records through Entity Framework Core.
     .AddEntityFrameworkStores<ApplicationDbContext>()
-
-    // Provide secure tokens for later password-reset and
-    // email-confirmation functionality.
     .AddDefaultTokenProviders();
 
-// Register permission checking for protected pages and actions.
+builder.Services.ConfigureApplicationCookie(options =>
+{
+    options.LoginPath = "/";
+    options.AccessDeniedPath = "/access-denied";
+    options.Cookie.Name = "SecureEmployeePortal.Auth";
+    options.Cookie.HttpOnly = true;
+    options.Cookie.SecurePolicy = builder.Environment.IsDevelopment()
+        ? CookieSecurePolicy.SameAsRequest
+        : CookieSecurePolicy.Always;
+    options.Cookie.SameSite = SameSiteMode.Lax;
+    options.SlidingExpiration = true;
+    options.ExpireTimeSpan = TimeSpan.FromHours(8);
+});
+
 builder.Services.AddAuthorization();
-
-// Make the signed-in employee's authentication state available
-// throughout the Blazor component hierarchy.
 builder.Services.AddCascadingAuthenticationState();
+builder.Services.AddScoped<Microsoft.AspNetCore.Components.Authorization.AuthenticationStateProvider, PortalRevalidatingAuthenticationStateProvider>();
+builder.Services.AddScoped<PortalActivityService>();
+builder.Services.AddScoped<PortalAuthorizationService>();
+builder.Services.AddScoped<PasswordResetDeliveryService>();
+builder.Services.AddScoped<AttendanceService>();
+builder.Services.AddScoped<AccessRequestService>();
+builder.Services.AddSingleton<SecureAssistantService>();
+builder.Services.AddHealthChecks();
 
-// Preserve the existing Razor-components and
-// Interactive Server configuration.
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
 
 var app = builder.Build();
 
-// Preserve the existing production error handling.
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Error", createScopeForErrors: true);
     app.UseHsts();
 }
 
-// Preserve the existing not-found-page behaviour.
-app.UseStatusCodePagesWithReExecute(
-    "/not-found",
-    createScopeForStatusCodePages: true);
+app.UseStatusCodePagesWithReExecute("/not-found", createScopeForStatusCodePages: true);
 
-// Preserve the existing HTTPS redirection.
+// Add a small set of defensive response headers that do not interfere with Blazor.
+app.Use(async (context, next) =>
+{
+    context.Response.Headers["X-Content-Type-Options"] = "nosniff";
+    context.Response.Headers["X-Frame-Options"] = "DENY";
+    context.Response.Headers["Referrer-Policy"] = "no-referrer";
+    await next();
+});
+
 app.UseHttpsRedirection();
-
-// Read the signed-in employee's authentication cookie
-// before checking what that employee may access.
 app.UseAuthentication();
 app.UseAuthorization();
-
-// Preserve the existing antiforgery protection.
 app.UseAntiforgery();
-
-// Preserve the existing static assets and Blazor application mapping.
 app.MapStaticAssets();
+app.MapHealthChecks("/health").AllowAnonymous();
+
+// Logout is deliberately a POST action and validates the antiforgery token.
+app.MapPost("/account/logout", async (
+        HttpContext context,
+        IAntiforgery antiforgery,
+        SignInManager<ApplicationUser> signInManager,
+        UserManager<ApplicationUser> userManager,
+        PortalActivityService activityService,
+        ILoggerFactory loggerFactory) =>
+    {
+        await antiforgery.ValidateRequestAsync(context);
+        var user = await userManager.GetUserAsync(context.User);
+
+        if (user is not null)
+        {
+            try
+            {
+                await activityService.RecordSecurityEventAsync(
+                    user.Id,
+                    "Logout",
+                    true,
+                    "Employee signed out.");
+            }
+            catch (Exception exception)
+            {
+                // Logging must never prevent an authenticated user from ending their session.
+                loggerFactory.CreateLogger("Logout").LogWarning(exception, "Logout security-event recording failed.");
+            }
+        }
+
+        await signInManager.SignOutAsync();
+        return Results.LocalRedirect("/");
+    })
+    .RequireAuthorization();
 
 app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode();
 
+// Development applies migrations automatically for a low-friction local demo.
+// Hosted environments may opt in with Database__ApplyMigrationsOnStartup=true;
+// otherwise migrations should be applied explicitly during deployment.
+var applyMigrationsOnStartup = app.Environment.IsDevelopment()
+    || app.Configuration.GetValue<bool>("Database:ApplyMigrationsOnStartup");
+
+if (applyMigrationsOnStartup)
+{
+    using var scope = app.Services.CreateScope();
+    var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+    await dbContext.Database.MigrateAsync();
+}
+
+await PortalSeedService.SeedAsync(app.Services, app.Configuration);
+
 app.Run();
+
+// Exposes Program to the integration-test host without changing runtime behaviour.
+public partial class Program { }

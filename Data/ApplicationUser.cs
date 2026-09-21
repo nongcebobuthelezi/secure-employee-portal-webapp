@@ -1,21 +1,32 @@
-// Defines the employee account used by ASP.NET Core Identity
-// throughout the Secure Employee Portal.
+// Defines the employee account used by ASP.NET Core Identity throughout the portal.
 using Microsoft.AspNetCore.Identity;
 
 namespace SecureEmployeePortal.Data;
 
-/// <summary>
-/// Represents one authenticated employee account in the portal.
-/// IdentityUser already provides the standard account and security fields,
-/// including email, username, password hash, and lockout information.
-/// </summary>
 public class ApplicationUser : IdentityUser
 {
-    // Stores the employee's first name.
     [PersonalData]
     public string FirstName { get; set; } = string.Empty;
 
-    // Stores the employee's last name.
     [PersonalData]
     public string LastName { get; set; } = string.Empty;
+
+    [PersonalData]
+    public string EmployeeNumber { get; set; } = string.Empty;
+
+    [PersonalData]
+    public string JobTitle { get; set; } = "Employee";
+
+    [PersonalData]
+    public string Department { get; set; } = "Operations";
+
+    public AccountStatus AccountStatus { get; set; } = AccountStatus.Active;
+
+    public DateTimeOffset CreatedAt { get; set; } = DateTimeOffset.UtcNow;
+
+    public DateTimeOffset? LastLoginAt { get; set; }
+
+    public DateTimeOffset? LastPasswordChangeAt { get; set; }
+
+    public string FullName => $"{FirstName} {LastName}".Trim();
 }

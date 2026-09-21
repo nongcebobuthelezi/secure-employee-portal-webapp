@@ -11,7 +11,7 @@
 
 /* =========================================================
    DASHBOARD OVERVIEW ROW
-   Places the employee greeting on the left and the weather
+   Places the employee greeting on the left and the account summary
    and date summary on the right.
    ========================================================= */
 .dashboard-overview-row {
@@ -47,8 +47,8 @@
 
 
 /* =========================================================
-   WEATHER AND DATE SUMMARY
-   Recreates the compact weather-and-date block shown beside
+   ACCOUNT ACCESS AND DATE SUMMARY
+   Keeps the compact account-and-date block beside
    the dashboard greeting in the reference.
    ========================================================= */
 .dashboard-day-summary {
@@ -58,7 +58,7 @@
     flex: 0 0 auto;
 }
 
-/* Align the weather icon beside its temperature information. */
+/* Align the account icon beside its access information. */
 .dashboard-weather {
     display: flex;
     align-items: center;
@@ -66,7 +66,7 @@
 }
 
 /* =========================================================
-   POLISHED WEATHER ICON
+   POLISHED ACCOUNT ICON
    Preserves the existing footprint while adding richer
    colour, layering, and visual depth.
    ========================================================= */
@@ -88,7 +88,7 @@
 
 
 /* =========================================================
-   WEATHER SUN
+   ACCOUNT ICON ACCENT
    Creates the warm partly-cloudy glow behind the cloud.
    ========================================================= */
 .dashboard-weather-sun {
@@ -108,7 +108,7 @@
 
 
 /* =========================================================
-   WEATHER CLOUD
+   ACCOUNT ICON BASE
    Uses a soft shadow and bright gradient for a fuller,
    slightly three-dimensional appearance.
    ========================================================= */
@@ -140,13 +140,13 @@
     font-weight: 700;
 }
 
-/* Style the weather description. */
+/* Style the account summary description. */
 .dashboard-weather-copy span {
     color: #687289;
     font-size: 12px;
 }
 
-/* Separate weather and date without introducing a card. */
+/* Separate account summary and date without introducing a card. */
 .dashboard-summary-divider {
     width: 1px;
     height: 42px;
@@ -177,7 +177,7 @@
 
 /* =========================================================
    RESPONSIVE DASHBOARD OVERVIEW
-   Allows the weather and date to move beneath the greeting
+   Allows the account summary and date to move beneath the greeting
    when the available width becomes limited.
    ========================================================= */
 @media (max-width: 760px) {
@@ -245,41 +245,6 @@
 }
 
 
-/* =========================================================
-   TEMPORARY DASHBOARD CARD PLACEHOLDERS
-   Confirms the layout geometry before each real card is built.
-   These placeholders will be replaced one card at a time.
-   ========================================================= */
-.dashboard-card-placeholder {
-    display: flex;
-    align-items: flex-start;
-    min-width: 0;
-    min-height: 220px;
-    padding: 20px;
-    border: 1px dashed #cbd5e3;
-    border-radius: 11px;
-    color: #8490a5;
-    font-size: 13px;
-    background: #ffffff;
-    box-sizing: border-box;
-}
-
-/* Give the middle and bottom primary rows a shorter height. */
-.dashboard-middle-card-row .dashboard-card-placeholder,
-.dashboard-bottom-card-row .dashboard-card-placeholder {
-    min-height: 205px;
-}
-
-/* Give the information-column cards reference-like proportions. */
-.dashboard-side-card {
-    min-height: 270px;
-}
-
-/* Keep the future employee-help card more compact. */
-.dashboard-help-placeholder {
-    min-height: 185px;
-    background: #eef6ff;
-}
 
 
 /* =========================================================
@@ -476,8 +441,8 @@
         conic-gradient(
             from -90deg,
             #ffffff 0%,
-            #ffffff 76%,
-            rgba(255, 255, 255, 0.28) 76%,
+            #ffffff var(--attendance-progress, 0%),
+            rgba(255, 255, 255, 0.28) var(--attendance-progress, 0%),
             rgba(255, 255, 255, 0.28) 100%
         );
 
@@ -1518,7 +1483,7 @@
 }
 
 /* =========================================================
-   LATEST ANNOUNCEMENTS CARD
+   SECURITY GUIDANCE CARD
    Recreates the top information-column card from the employee
    dashboard reference.
    ========================================================= */
@@ -1693,7 +1658,7 @@
 }
 
 /* =========================================================
-   UPCOMING EVENTS CARD
+   ACCOUNT TIMELINE CARD
    Recreates the company-calendar card beneath the latest
    announcements section in the dashboard reference.
    ========================================================= */
@@ -1712,7 +1677,7 @@
 
 
 /* =========================================================
-   UPCOMING EVENTS HEADER
+   ACCOUNT TIMELINE HEADER
    Aligns the card title with the calendar action.
    ========================================================= */
 .upcoming-events-header {
@@ -1876,7 +1841,7 @@
 
 /* =========================================================
    EMPLOYEE HELP CARD
-   Recreates the soft-blue HR support card at the bottom of
+   Recreates the soft-blue Secure Assistant support card at the bottom of
    the dashboard information column.
    ========================================================= */
 .dashboard-help-card {
@@ -1934,7 +1899,7 @@
     line-height: 1.55;
 }
 
-/* Create the white HR-assistant action button. */
+/* Create the white Secure Assistant action button. */
 .dashboard-help-button {
     min-height: 37px;
     padding: 0 13px;
@@ -1957,7 +1922,7 @@
 
 
 /* =========================================================
-   TEMPORARY HR ROBOT
+   SECURE ASSISTANT ROBOT
    Matches the reference’s white-and-blue assistant while
    preserving a clean image-replacement area for later.
    ========================================================= */
@@ -2069,5 +2034,447 @@
         right: 0;
         bottom: -10px;
         opacity: 0.72;
+    }
+}
+/* Final functional dashboard states. */
+.dashboard-inline-status {
+    margin-top: 12px;
+    padding: 9px 12px;
+    border-radius: 8px;
+    color: #eaf4ff;
+    background: rgba(255, 255, 255, .12);
+    font-size: 11px;
+    font-weight: 600;
+}
+
+.dashboard-static-label {
+    color: #7d899f;
+    font-size: 10px;
+    font-weight: 600;
+}
+
+.attendance-actions button:disabled {
+    cursor: not-allowed;
+    opacity: .65;
+}
+
+/* Make dashboard account actions genuine destinations without changing the approved card layout. */
+.task-item-link {
+    color: inherit;
+    text-decoration: none;
+    cursor: pointer;
+    transition: background-color .16s ease, transform .16s ease, box-shadow .16s ease;
+}
+
+.task-item-link:hover {
+    color: inherit;
+    text-decoration: none;
+    background: #fbfdff;
+    box-shadow: 0 7px 18px rgba(23, 49, 93, .055);
+    transform: translateY(-1px);
+}
+
+.task-item-link:focus-visible {
+    outline: 3px solid rgba(47, 115, 232, .22);
+    outline-offset: 2px;
+}
+
+/* Six core self-service shortcuts read more cleanly as two balanced rows. */
+@media (min-width: 781px) {
+    .quick-links-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+}
+
+/* Final account-summary treatment replaces the earlier decorative weather glyph. */
+.dashboard-account-summary {
+    min-width: 168px;
+}
+
+.dashboard-account-icon {
+    display: grid;
+    place-items: center;
+    flex: 0 0 auto;
+    width: 38px;
+    height: 38px;
+    border-radius: 12px;
+    color: #2a76dc;
+    background: linear-gradient(145deg, #eefbfc, #edf3ff);
+}
+
+.dashboard-account-icon svg {
+    width: 21px;
+    height: 21px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.8;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+.announcement-meta {
+    display: inline-flex;
+    align-items: center;
+    width: fit-content;
+    margin-top: 7px;
+    padding: 4px 8px;
+    border-radius: 999px;
+    color: #54708e;
+    background: #f1f6fb;
+    font-size: 9px;
+    font-weight: 700;
+    line-height: 1.2;
+}
+
+/* =========================================================
+   SECURE ASSISTANT
+   Functional in-dashboard support bot inspired by the chat
+   treatment in the MyNIF employee-dashboard reference.
+   ========================================================= */
+.secure-assistant-launcher {
+    position: fixed;
+    right: 28px;
+    bottom: 28px;
+    z-index: 60;
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    min-height: 48px;
+    padding: 8px 16px 8px 9px;
+    border: 1px solid #c9dcf6;
+    border-radius: 999px;
+    color: #0b3f8f;
+    font: inherit;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    background: #ffffff;
+    box-shadow: 0 12px 32px rgba(25, 56, 103, 0.16);
+    transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
+}
+
+.secure-assistant-launcher:hover {
+    transform: translateY(-2px);
+    border-color: #8bbbf5;
+    box-shadow: 0 16px 38px rgba(25, 56, 103, 0.22);
+}
+
+.secure-assistant-launcher:focus-visible,
+.secure-assistant-close:focus-visible,
+.secure-assistant-suggestions button:focus-visible,
+.secure-assistant-composer button:focus-visible,
+.secure-assistant-action:focus-visible {
+    outline: 3px solid rgba(47, 114, 238, 0.28);
+    outline-offset: 2px;
+}
+
+.secure-assistant-launcher img {
+    width: 32px;
+    height: 32px;
+    padding: 5px;
+    border-radius: 50%;
+    background: #edf7ff;
+    box-sizing: border-box;
+}
+
+.secure-assistant-panel {
+    position: fixed;
+    right: 28px;
+    bottom: 28px;
+    z-index: 70;
+    display: grid;
+    grid-template-rows: auto minmax(0, 1fr) auto auto auto;
+    width: min(390px, calc(100vw - 40px));
+    height: min(570px, calc(100vh - 108px));
+    overflow: hidden;
+    border: 1px solid #dbe5f2;
+    border-radius: 16px;
+    color: #10213f;
+    background: #ffffff;
+    box-shadow: 0 22px 60px rgba(11, 39, 79, 0.24);
+}
+
+.secure-assistant-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 14px;
+    min-height: 70px;
+    padding: 12px 14px;
+    border-bottom: 1px solid #e5ebf4;
+    background: #ffffff;
+}
+
+.secure-assistant-identity {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-width: 0;
+}
+
+.secure-assistant-avatar {
+    flex: 0 0 auto;
+    display: grid;
+    place-items: center;
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    background: linear-gradient(145deg, #eef8ff, #e7f1ff);
+}
+
+.secure-assistant-avatar img {
+    width: 29px;
+    height: 29px;
+}
+
+.secure-assistant-identity > div {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    min-width: 0;
+}
+
+.secure-assistant-identity strong {
+    font-size: 14px;
+    font-weight: 800;
+}
+
+.secure-assistant-identity span {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    color: #71809a;
+    font-size: 11px;
+}
+
+.secure-assistant-identity i {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: #2bb673;
+    box-shadow: 0 0 0 3px rgba(43, 182, 115, 0.12);
+}
+
+.secure-assistant-close {
+    display: grid;
+    place-items: center;
+    width: 34px;
+    height: 34px;
+    padding: 0;
+    border: 0;
+    border-radius: 9px;
+    color: #64738b;
+    font: inherit;
+    font-size: 24px;
+    line-height: 1;
+    cursor: pointer;
+    background: transparent;
+}
+
+.secure-assistant-close:hover {
+    color: #153b75;
+    background: #f0f5fb;
+}
+
+.secure-assistant-messages {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    min-height: 0;
+    padding: 18px 16px;
+    overflow-y: auto;
+    background: #f8fafc;
+}
+
+.secure-assistant-message {
+    display: flex;
+    align-items: flex-end;
+    gap: 8px;
+}
+
+.secure-assistant-message.is-user {
+    justify-content: flex-end;
+}
+
+.secure-assistant-message-avatar {
+    flex: 0 0 auto;
+    width: 25px;
+    height: 25px;
+    padding: 4px;
+    border-radius: 50%;
+    background: #eaf4ff;
+    box-sizing: border-box;
+}
+
+.secure-assistant-bubble {
+    max-width: 82%;
+    padding: 11px 13px;
+    border: 1px solid #e1e8f2;
+    border-radius: 13px 13px 13px 4px;
+    background: #ffffff;
+    box-shadow: 0 4px 12px rgba(29, 55, 92, 0.05);
+}
+
+.secure-assistant-message.is-user .secure-assistant-bubble {
+    border: 0;
+    border-radius: 13px 13px 4px 13px;
+    color: #ffffff;
+    background: linear-gradient(135deg, #2f72ee 0%, #38c8c8 100%);
+    box-shadow: 0 8px 18px rgba(47, 114, 238, 0.2);
+}
+
+.secure-assistant-bubble p {
+    margin: 0;
+    font-size: 12px;
+    line-height: 1.55;
+}
+
+.secure-assistant-action {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    margin-top: 9px;
+    color: #1d66db;
+    font-size: 11px;
+    font-weight: 700;
+    text-decoration: none;
+}
+
+.secure-assistant-action:hover {
+    text-decoration: underline;
+}
+
+.secure-assistant-suggestions {
+    display: flex;
+    gap: 7px;
+    padding: 10px 12px 4px;
+    overflow-x: auto;
+    border-top: 1px solid #edf1f6;
+    background: #ffffff;
+}
+
+.secure-assistant-suggestions button {
+    flex: 0 0 auto;
+    padding: 7px 9px;
+    border: 1px solid #d5e3f6;
+    border-radius: 999px;
+    color: #285a9e;
+    font: inherit;
+    font-size: 10px;
+    font-weight: 600;
+    white-space: nowrap;
+    cursor: pointer;
+    background: #f7fbff;
+}
+
+.secure-assistant-suggestions button:hover {
+    border-color: #9ec5f4;
+    background: #eef7ff;
+}
+
+.secure-assistant-error {
+    margin: 6px 12px 0;
+    padding: 8px 10px;
+    border: 1px solid #ffd0d0;
+    border-radius: 8px;
+    color: #a42727;
+    font-size: 11px;
+    background: #fff5f5;
+}
+
+.secure-assistant-composer {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 42px;
+    gap: 8px;
+    padding: 10px 12px 12px;
+    background: #ffffff;
+}
+
+.secure-assistant-composer input {
+    width: 100%;
+    min-width: 0;
+    height: 42px;
+    padding: 0 13px;
+    border: 1px solid #d7e0ec;
+    border-radius: 10px;
+    outline: 0;
+    color: #162743;
+    font: inherit;
+    font-size: 12px;
+    background: #ffffff;
+    box-sizing: border-box;
+}
+
+.secure-assistant-composer input:focus {
+    border-color: #79adf0;
+    box-shadow: 0 0 0 3px rgba(46, 125, 238, 0.11);
+}
+
+.secure-assistant-composer button {
+    display: grid;
+    place-items: center;
+    width: 42px;
+    height: 42px;
+    padding: 0;
+    border: 0;
+    border-radius: 11px;
+    color: #ffffff;
+    cursor: pointer;
+    background: linear-gradient(135deg, #3278ef 0%, #3ac7c6 100%);
+    box-shadow: 0 8px 18px rgba(50, 120, 239, 0.2);
+}
+
+.secure-assistant-composer button:disabled {
+    cursor: not-allowed;
+    opacity: 0.45;
+    box-shadow: none;
+}
+
+.secure-assistant-composer button svg {
+    width: 20px;
+    height: 20px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.8;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+@media (max-width: 720px) {
+    .secure-assistant-launcher {
+        right: 16px;
+        bottom: 16px;
+    }
+
+    .secure-assistant-panel {
+        right: 12px;
+        bottom: 12px;
+        width: calc(100vw - 24px);
+        height: min(620px, calc(100vh - 92px));
+        border-radius: 14px;
+    }
+}
+
+@media (max-width: 460px) {
+    .secure-assistant-launcher span {
+        display: none;
+    }
+
+    .secure-assistant-launcher {
+        width: 52px;
+        height: 52px;
+        padding: 9px;
+    }
+
+    .secure-assistant-launcher img {
+        width: 34px;
+        height: 34px;
+    }
+
+    .secure-assistant-panel {
+        right: 8px;
+        bottom: 8px;
+        width: calc(100vw - 16px);
+        height: calc(100vh - 78px);
     }
 }

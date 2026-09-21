@@ -1,9 +1,17 @@
-﻿@page "/"
+@page "/"
 @layout AuthLayout
+@using Microsoft.AspNetCore.Identity
+@using SecureEmployeePortal.Data
+@using SecureEmployeePortal.Models
+@using SecureEmployeePortal.Services
+@inject SignInManager<ApplicationUser> SignInManager
+@inject UserManager<ApplicationUser> UserManager
+@inject SecureEmployeePortal.Services.PortalActivityService ActivityService
+@inject NavigationManager NavigationManager
 
 <PageTitle>Secure Employee Portal</PageTitle>
 
-<main class="login-shell">
+<main class="login-shell auth-login-page">
     <section class="login-visual-panel">
         <div class="brand-row">
 <div class="brand-icon" aria-hidden="true">
@@ -103,7 +111,7 @@ src="images/security-illustration-new.png"
 
         <div class="feature-copy">
             <strong>Secure Access</strong>
-            <span>Enterprise-grade security</span>
+            <span>Identity-backed security</span>
         </div>
     </div>
 
@@ -131,7 +139,7 @@ src="images/security-illustration-new.png"
 
         <div class="feature-copy">
             <strong>Stay Informed</strong>
-            <span>Updates, alerts and announcements</span>
+            <span>Security events and account access information</span>
         </div>
     </div>
 </div>
@@ -141,7 +149,7 @@ src="images/security-illustration-new.png"
     <section class="login-form-panel">
         <div class="form-panel-inner">
             @* =========================================================
-   ENTERPRISE SECURE BADGE
+   IDENTITY SECURITY BADGE
    Adds the small outlined security icon shown in the reference.
    ========================================================= *@
 <div class="security-badge">
@@ -153,8 +161,8 @@ src="images/security-illustration-new.png"
         </svg>
     </span>
 
-    @* Existing badge wording remains unchanged. *@
-    <span>Enterprise Secure</span>
+    @* Compact security badge shared with the account-creation flow. *@
+    <span>Identity Protected</span>
 </div>
 
             <div class="form-heading">
@@ -162,7 +170,18 @@ src="images/security-illustration-new.png"
                 <p>Sign in to access your secure employee account</p>
             </div>
 
-            <form class="login-form">
+            <EditForm Model="Input" FormName="login" OnValidSubmit="LoginUserAsync" class="login-form">
+                <DataAnnotationsValidator />
+
+                @if (RegistrationSucceeded)
+                {
+                    <div class="portal-success-message" role="status">Account created. You can sign in now.</div>
+                }
+
+                @if (!string.IsNullOrWhiteSpace(LoginError))
+                {
+                    <div class="portal-error-message" role="alert">@LoginError</div>
+                }
                 <div class="form-group">
                     <label for="email">Email address</label>
 
@@ -181,11 +200,15 @@ src="images/security-illustration-new.png"
     </span>
 
     @* Existing email input with extra internal room for the icon. *@
-    <input
+    <InputText
         id="email"
         type="email"
+        @bind-Value="Input!.Email"
+        autocomplete="username"
+        maxlength="256"
         placeholder="Enter your work email" />
 </div>
+                    <ValidationMessage For="() => Input!.Email" />
                 </div>
 
                 <div class="form-group">
@@ -206,37 +229,40 @@ src="images/security-illustration-new.png"
     </span>
 
     @* Existing password field remains a password input. *@
-    <input
+    <InputText
         id="password"
         type="password"
+        @bind-Value="Input!.Password"
+        autocomplete="current-password"
+        maxlength="100"
         placeholder="Enter your password" />
 
-    @* Decorative eye icon inside the right side of the field.
-       We will make this functional in a separate controlled step. *@
-    <span class="field-icon field-icon-right" aria-hidden="true">
-        <svg viewBox="0 0 24 24">
-            <path d="M2.5 12s3.5-6 9.5-6 9.5 6 9.5 6-3.5 6-9.5 6-9.5-6-9.5-6Z" />
-            <circle cx="12" cy="12" r="2.5" />
-        </svg>
-    </span>
+    @* Functional password-visibility control. *@
+    <button class="password-visibility-toggle" type="button" data-password-toggle="password" aria-label="Show password" aria-pressed="false">
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M2.5 12s3.5-6 9.5-6 9.5 6 9.5 6-3.5 6-9.5 6-9.5-6-9.5-6Z" />
+                    <circle cx="12" cy="12" r="2.5" />
+                </svg>
+    </button>
 </div>
+                    <ValidationMessage For="() => Input!.Password" />
 
                     <small>Password must be at least 8 characters</small>
                 </div>
 
                 <div class="form-options">
                     <label class="remember-option">
-                        <input type="checkbox" />
+                        <InputCheckbox @bind-Value="Input!.RememberMe" />
                         <span>Remember me</span>
                     </label>
 
-                    <a href="#">Forgot password?</a>
+                    <a href="/forgot-password">Forgot password?</a>
                 </div>
 
-                <button class="sign-in-button" type="button">
+                <button class="sign-in-button" type="submit">
                     Sign In
                 </button>
-            </form>
+            </EditForm>
 
             <div class="account-divider">
                 <span></span>
@@ -246,7 +272,7 @@ src="images/security-illustration-new.png"
 
             <p class="create-account">
                 Don’t have an account?
-                <a href="#">Create account</a>
+                <a href="/register">Create account</a>
             </p>
 
             <div class="support-card">
@@ -261,11 +287,11 @@ src="images/security-illustration-new.png"
 
     <div class="support-copy">
         <strong>Need help signing in?</strong>
-        <span>Contact the IT Support Team</span>
+        <span>Use account recovery or the portal help area</span>
 
         <div class="support-contact">
-            <a href="mailto:support@company.com">support@company.com</a>
-            <span>• +1 (555) 123-4567</span>
+            <a href="/forgot-password">Use password recovery</a>
+            <span>• Secure account support</span>
         </div>
     </div>
 
@@ -286,8 +312,8 @@ src="images/security-illustration-new.png"
     </div>
 
     <p>
-        Secure Employee Portal is protected by state-of-the-art
-        encryption and compliance standards.
+        Secure Employee Portal uses ASP.NET Core Identity for account security
+        and server-side access controls for protected areas.
     </p>
 </div>
 
@@ -295,3 +321,74 @@ src="images/security-illustration-new.png"
         </div>
     </section>
 </main>
+
+@code {
+    [SupplyParameterFromForm(FormName = "login")]
+    private LoginInputModel? Input { get; set; }
+
+    // Static SSR form mapping uses the bound property name as the form-data prefix.
+    // Keep the actual EditForm model on this attributed property so posted credentials
+    // map back into the same object instead of being discarded during the POST.
+    protected override void OnInitialized() => Input ??= new();
+
+    [SupplyParameterFromQuery(Name = "returnUrl")]
+    private string? ReturnUrl { get; set; }
+
+    [SupplyParameterFromQuery(Name = "registration")]
+    private string? Registration { get; set; }
+
+    private string? LoginError { get; set; }
+    private bool RegistrationSucceeded => string.Equals(Registration, "success", StringComparison.OrdinalIgnoreCase);
+
+    private async Task LoginUserAsync()
+    {
+        LoginError = null;
+        var input = Input!;
+        var email = input.Email.Trim();
+        var user = await UserManager.FindByEmailAsync(email);
+
+        if (user is null || !AccountAccessRules.MaySignIn(user.AccountStatus))
+        {
+            await ActivityService.RecordSecurityEventAsync(
+                user?.Id,
+                "LoginFailed",
+                false,
+                "Login rejected because credentials or account availability could not be verified.");
+
+            LoginError = "The email address or password is incorrect, or the account is not available.";
+            return;
+        }
+
+        var result = await SignInManager.PasswordSignInAsync(
+            user,
+            input.Password,
+            input.RememberMe,
+            lockoutOnFailure: true);
+
+        if (!result.Succeeded)
+        {
+            await ActivityService.RecordSecurityEventAsync(
+                user.Id,
+                "LoginFailed",
+                false,
+                result.IsLockedOut ? "Login rejected because the account is temporarily locked." : "Login rejected because the supplied credentials were invalid.");
+
+            LoginError = "The email address or password is incorrect, or the account is not available.";
+            return;
+        }
+
+        user.LastLoginAt = DateTimeOffset.UtcNow;
+        await UserManager.UpdateAsync(user);
+
+        await ActivityService.RecordSecurityEventAsync(
+            user.Id,
+            "LoginSucceeded",
+            true,
+            "Employee signed in successfully.");
+
+        var destination = PortalSecurityRules.IsSafeLocalReturnUrl(ReturnUrl) ? ReturnUrl! : "/dashboard";
+        NavigationManager.NavigateTo(destination, forceLoad: true);
+    }
+
+
+}

@@ -1,4 +1,4 @@
-﻿@* Registration page route and shared authentication layout. *@
+@* Registration page route and shared authentication layout. *@
 @page "/register"
 @layout AuthLayout
 
@@ -10,6 +10,7 @@
 
 @* Provides the service that creates and validates Identity users. *@
 @inject UserManager<ApplicationUser> UserManager
+@inject SecureEmployeePortal.Services.PortalActivityService ActivityService
 
 @* Provides navigation after successful account creation. *@
 @inject NavigationManager NavigationManager
@@ -18,7 +19,7 @@
 @* Browser-tab title for the account-creation page. *@
 <PageTitle>Create Account | Secure Employee Portal</PageTitle>
 
-<main class="login-shell">
+<main class="login-shell auth-register-page">
     <section class="login-visual-panel">
         <div class="brand-row">
 <div class="brand-icon" aria-hidden="true">
@@ -120,8 +121,8 @@ src="images/security-illustration-new.png"
         </div>
 
         <div class="feature-copy">
-            <strong>Enterprise Security</strong>
-            <span>State-of-the-art encryption keeps your data protected</span>
+            <strong>Secure Accounts</strong>
+            <span>Passwords are protected with ASP.NET Core Identity</span>
         </div>
     </div>
 
@@ -134,8 +135,8 @@ src="images/security-illustration-new.png"
         </div>
 
         <div class="feature-copy">
-            <strong>Trusted Access</strong>
-            <span>Verified employees, secure connections</span>
+            <strong>Role-Based Access</strong>
+            <span>Employee, manager and administrator permissions</span>
         </div>
     </div>
 
@@ -148,8 +149,8 @@ src="images/security-illustration-new.png"
         </div>
 
         <div class="feature-copy">
-            <strong>Stay Informed</strong>
-            <span>Get important updates and announcements</span>
+            <strong>Account Activity</strong>
+            <span>Security events and access decisions stay traceable</span>
         </div>
     </div>
 </div>
@@ -159,7 +160,7 @@ src="images/security-illustration-new.png"
     <section class="login-form-panel">
         <div class="form-panel-inner">
             @* =========================================================
-   ENTERPRISE SECURE BADGE
+   IDENTITY SECURITY BADGE
    Adds the small outlined security icon shown in the reference.
    ========================================================= *@
 <div class="security-badge">
@@ -171,8 +172,8 @@ src="images/security-illustration-new.png"
         </svg>
     </span>
 
-    @* Existing badge wording remains unchanged. *@
-    <span>Enterprise Secure</span>
+    @* Compact security badge consistent with the login experience. *@
+    <span>Identity Protected</span>
 </div>
 
             <div class="form-heading">
@@ -216,6 +217,7 @@ src="images/security-illustration-new.png"
             id="first-name"
             @bind-Value="Input!.FirstName"
             autocomplete="given-name"
+            maxlength="100"
             placeholder="Enter your first name" />
     </div>
 
@@ -241,6 +243,7 @@ src="images/security-illustration-new.png"
             id="last-name"
             @bind-Value="Input!.LastName"
             autocomplete="family-name"
+            maxlength="100"
             placeholder="Enter your last name" />
     </div>
 
@@ -268,6 +271,7 @@ src="images/security-illustration-new.png"
             type="email"
             @bind-Value="Input!.WorkEmail"
             autocomplete="email"
+            maxlength="256"
             placeholder="Enter your work email address" />
     </div>
 
@@ -297,15 +301,16 @@ src="images/security-illustration-new.png"
             type="password"
             @bind-Value="Input!.Password"
             autocomplete="new-password"
+            maxlength="100"
             placeholder="Create a password" />
 
-        @* Decorative eye icon inside the right side. *@
-        <span class="field-icon field-icon-right" aria-hidden="true">
-            <svg viewBox="0 0 24 24">
-                <path d="M2.5 12s3.5-6 9.5-6 9.5 6 9.5 6-3.5 6-9.5 6-9.5-6-9.5-6Z" />
-                <circle cx="12" cy="12" r="2.5" />
-            </svg>
-        </span>
+        @* Functional password-visibility control. *@
+        <button class="password-visibility-toggle" type="button" data-password-toggle="register-password" aria-label="Show password" aria-pressed="false">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M2.5 12s3.5-6 9.5-6 9.5 6 9.5 6-3.5 6-9.5 6-9.5-6-9.5-6Z" />
+                    <circle cx="12" cy="12" r="2.5" />
+                </svg>
+        </button>
     </div>
 
     @* Show the Password validation message when required. *@
@@ -331,15 +336,16 @@ src="images/security-illustration-new.png"
             type="password"
             @bind-Value="Input!.ConfirmPassword"
             autocomplete="new-password"
+            maxlength="100"
             placeholder="Confirm your password" />
 
-        @* Decorative eye icon inside the right side. *@
-        <span class="field-icon field-icon-right" aria-hidden="true">
-            <svg viewBox="0 0 24 24">
-                <path d="M2.5 12s3.5-6 9.5-6 9.5 6 9.5 6-3.5 6-9.5 6-9.5-6-9.5-6Z" />
-                <circle cx="12" cy="12" r="2.5" />
-            </svg>
-        </span>
+        @* Functional password-visibility control. *@
+        <button class="password-visibility-toggle" type="button" data-password-toggle="confirm-password" aria-label="Show password" aria-pressed="false">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M2.5 12s3.5-6 9.5-6 9.5 6 9.5 6-3.5 6-9.5 6-9.5-6-9.5-6Z" />
+                    <circle cx="12" cy="12" r="2.5" />
+                </svg>
+        </button>
     </div>
 
     @* Show an error when the confirmation is missing or does not match. *@
@@ -350,7 +356,7 @@ src="images/security-illustration-new.png"
 @* =========================================================
    PASSWORD REQUIREMENTS PANEL
    Displays the account password rules beneath the two
-   password fields. Functional validation will be added later.
+   password fields. These rules are enforced by the form model and ASP.NET Core Identity.
    ========================================================= *@
 <div class="password-requirements">
 
@@ -386,6 +392,10 @@ src="images/security-illustration-new.png"
                 <span class="requirement-check" aria-hidden="true">✓</span>
                 <span>Include uppercase letter</span>
             </div>
+            <div class="password-requirement">
+                <span class="requirement-check" aria-hidden="true">✓</span>
+                <span>Include lowercase letter</span>
+            </div>
 
             @* Password-confirmation requirement. *@
             <div class="password-requirement">
@@ -412,12 +422,9 @@ src="images/security-illustration-new.png"
         @* Store the checkbox state in Input.AcceptTerms. *@
         <InputCheckbox @bind-Value="Input!.AcceptTerms" />
 
-        @* Agreement wording with links to the relevant policies. *@
+        @* Keep the acknowledgement self-contained until formal policy pages exist. *@
         <span>
-            I agree to the
-            <a href="#">Terms of Service</a>
-            and
-            <a href="#">Privacy Policy</a>.
+            I agree to the portal's acceptable-use and privacy requirements.
         </span>
     </label>
 
@@ -485,12 +492,12 @@ src="images/security-illustration-new.png"
     <strong>Need help creating your account?</strong>
 
     @* Registration-specific supporting message. *@
-    <span>Our support team is here to help you get started.</span>
+    <span>Use the built-in recovery flow if you already have an employee account.</span>
 
-    @* Existing support contact details remain unchanged. *@
+    @* Portfolio-safe support link without fictional contact details. *@
     <div class="support-contact">
-        <a href="mailto:support@company.com">support@company.com</a>
-        <span>• +1 (555) 123-4567</span>
+        <a href="/forgot-password">Use password recovery</a>
+        <span>• Secure account support</span>
     </div>
 </div>
 
@@ -534,14 +541,19 @@ src="images/security-illustration-new.png"
         // Remove accidental spaces around the submitted email.
         var email = Input!.WorkEmail.Trim();
 
-        // Convert the temporary Registration details into the
+        // Convert the submitted registration details into the
         // permanent employee-account type stored by Identity.
         var user = new ApplicationUser
         {
             UserName = email,
             Email = email,
             FirstName = Input.FirstName.Trim(),
-            LastName = Input.LastName.Trim()
+            LastName = Input.LastName.Trim(),
+            EmployeeNumber = $"EMP-{Guid.NewGuid():N}"[..12].ToUpperInvariant(),
+            JobTitle = "Employee",
+            Department = "Operations",
+            AccountStatus = AccountStatus.Active,
+            CreatedAt = DateTimeOffset.UtcNow
         };
 
         // Ask Identity to validate the password and create
@@ -557,7 +569,28 @@ src="images/security-illustration-new.png"
             return;
         }
 
+        // Every public registration begins with the least-privileged role.
+        var roleResult = await UserManager.AddToRoleAsync(user, "Employee");
+        if (!roleResult.Succeeded)
+        {
+            var deleteResult = await UserManager.DeleteAsync(user);
+            IdentityErrors = deleteResult.Succeeded
+                ? roleResult.Errors
+                : [new IdentityError
+                {
+                    Code = "RegistrationRollbackFailed",
+                    Description = "The account could not be completed safely. Please contact an administrator before trying again."
+                }];
+            return;
+        }
+
+        await ActivityService.RecordSecurityEventAsync(
+            user.Id,
+            "AccountCreated",
+            true,
+            "Employee account created through self-service registration.");
+
         // Return the newly registered employee to the Login page.
-        NavigationManager.NavigateTo("/?registration=success");
+        NavigationManager.NavigateTo("/?registration=success", forceLoad: true);
     }
 }

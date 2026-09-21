@@ -399,3 +399,10 @@ FodyWeavers.xsd
 
 # JetBrains Rider
 *.sln.iml
+
+# Local development password-reset mailbox (contains temporary reset links)
+App_Data/
+
+# Test output
+TestResults/
+*.trx

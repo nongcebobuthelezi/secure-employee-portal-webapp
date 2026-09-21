@@ -407,7 +407,7 @@
 }
 
 /* =========================================================
-   TOP-BAR HR ASSISTANT IMAGE
+   TOP-BAR SECURE ASSISTANT IMAGE
    Fits the reusable robot artwork inside the existing icon
    area without resizing or shifting the help button.
    ========================================================= */
@@ -470,8 +470,8 @@
 
 /* =========================================================
    EMPLOYEE PROFILE CONTROL
-   Uses temporary initials until the profile photograph is
-   supplied and added to the project.
+   Uses generated initials so the portal never depends on a
+   stock or hard-coded employee photograph.
    ========================================================= */
 .topbar-profile-button {
     display: inline-flex;
@@ -485,7 +485,7 @@
     background: transparent;
 }
 
-/* Temporary profile-photo replacement. */
+/* Authenticated-user initials avatar. */
 .topbar-avatar-placeholder {
     display: grid;
     place-items: center;
@@ -506,22 +506,6 @@
     box-shadow: 0 3px 10px rgba(23, 49, 93, 0.12);
 }
 
-/* =========================================================
-   EMPLOYEE PROFILE PHOTOGRAPH
-   Matches the previous initials-circle dimensions while
-   cropping the square photograph neatly inside the avatar.
-   ========================================================= */
-.topbar-avatar-image {
-    display: block;
-    flex: 0 0 37px;
-    width: 37px;
-    height: 37px;
-    border: 1px solid #dce3ec;
-    border-radius: 50%;
-    object-fit: cover;
-    object-position: center 34%;
-    box-shadow: 0 3px 10px rgba(23, 49, 93, 0.12);
-}
 
 /* Keep the full employee name on one line. */
 .topbar-profile-name {
@@ -530,25 +514,6 @@
     font-weight: 600;
 }
 
-/* Align the small dropdown chevron. */
-.topbar-profile-chevron {
-    display: grid;
-    place-items: center;
-    width: 17px;
-    height: 17px;
-    color: #152140;
-}
-
-/* Style the profile dropdown indicator. */
-.topbar-profile-chevron svg {
-    width: 17px;
-    height: 17px;
-    fill: none;
-    stroke: currentColor;
-    stroke-width: 1.8;
-    stroke-linecap: round;
-    stroke-linejoin: round;
-}
 
 /* Provide the scrollable dashboard-content surface. */
 .employee-content {
@@ -557,20 +522,4 @@
     overflow: visible;
     background: #f4f7fb;
     box-sizing: border-box;
-}
-
-/* =========================================================
-   RESPONSIVE EMPLOYEE LAYOUT
-   Temporarily hides the desktop sidebar on smaller screens.
-   The functional mobile drawer will be added later.
-   ========================================================= */
-@media (max-width: 900px) {
-    .employee-shell {
-        grid-template-columns: 1fr;
-    }
-
-    /* Hide the desktop navigation until the drawer is built. */
-    .employee-sidebar {
-        display: none;
-    }
 }

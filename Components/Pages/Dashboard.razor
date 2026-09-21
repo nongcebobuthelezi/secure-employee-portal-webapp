@@ -4,6 +4,18 @@
    ========================================================= *@
 @page "/dashboard"
 @layout EmployeeLayout
+@rendermode InteractiveServer
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Identity
+@using SecureEmployeePortal.Data
+@using SecureEmployeePortal.Services
+@attribute [Authorize]
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject UserManager<ApplicationUser> UserManager
+@inject AttendanceService AttendanceService
+@inject SecureAssistantService SecureAssistantService
+@inject NavigationManager NavigationManager
+@inject IJSRuntime JSRuntime
 
 @* Browser-tab title for the employee dashboard. *@
 <PageTitle>Dashboard | Secure Employee Portal</PageTitle>
@@ -12,109 +24,42 @@
 
    @* =========================================================
    DASHBOARD OVERVIEW ROW
-   Combines the personalised greeting with the employee’s
-   current weather and date summary.
+   Combines the personalised greeting with a compact
+   environment summary and current date.
    ========================================================= *@
 <header class="dashboard-overview-row">
 
     @* Personalised employee greeting. *@
     <div class="dashboard-introduction">
-        <h1>Good morning, Nongcebo 👋</h1>
+        <h1>@Greeting, @DisplayFirstName 👋</h1>
 
         <p>Here’s what’s happening with your work today.</p>
     </div>
 
     @* =====================================================
-       WEATHER AND DATE SUMMARY
-       These values are visual placeholders for now. They can
-       later be connected to live weather and system dates.
+       ACCOUNT ACCESS AND DATE SUMMARY
+       Keeps the compact reference layout while showing real
+       authenticated account information instead of placeholder live data.
        ===================================================== *@
     <div class="dashboard-day-summary">
-
-        @* Current weather summary. *@
-        <section class="dashboard-weather" aria-label="Current weather">
-
-            @* =========================================================
-   POLISHED PARTLY-CLOUDY WEATHER ICON
-   Uses layered gradients and subtle depth while preserving
-   the existing weather-summary dimensions and position.
-   ========================================================= *@
-<span class="dashboard-weather-icon" aria-hidden="true">
-    <svg viewBox="0 0 52 48">
-
-        @* Colour gradients used by the sun and cloud. *@
-        <defs>
-            <linearGradient
-                id="dashboardSunGradient"
-                x1="22"
-                y1="6"
-                x2="39"
-                y2="24"
-                gradientUnits="userSpaceOnUse">
-
-                <stop offset="0%" stop-color="#FFD84A" />
-                <stop offset="55%" stop-color="#FFB515" />
-                <stop offset="100%" stop-color="#F49300" />
-            </linearGradient>
-
-            <linearGradient
-                id="dashboardCloudGradient"
-                x1="14"
-                y1="20"
-                x2="39"
-                y2="43"
-                gradientUnits="userSpaceOnUse">
-
-                <stop offset="0%" stop-color="#FFFFFF" />
-                <stop offset="58%" stop-color="#EAF3FC" />
-                <stop offset="100%" stop-color="#C9DFF2" />
-            </linearGradient>
-        </defs>
-
-        @* Soft sunlight rays behind the cloud. *@
-        <g class="dashboard-weather-rays">
-            <path d="M34 3v5" />
-            <path d="m44 7-3.5 3.5" />
-            <path d="M48 17h-5" />
-            <path d="m24 7 3.5 3.5" />
-        </g>
-
-        @* Warm gradient sun partly hidden behind the cloud. *@
-        <circle
-            class="dashboard-weather-sun"
-            cx="34"
-            cy="17"
-            r="9" />
-
-        @* Soft blue shadow beneath the main cloud. *@
-        <path
-            class="dashboard-weather-cloud-shadow"
-            d="M12 39h29c4 0 7-3 7-6.8 0-3.2-2.2-5.9-5.3-6.6-.9-5.7-5.6-9.8-11.5-9.8-4.8 0-8.9 2.7-10.7 6.8C14.7 22.8 10 27.4 10 33c0 2.4.7 4.4 2 6Z" />
-
-        @* Main bright cloud shape. *@
-        <path
-            class="dashboard-weather-cloud"
-            d="M10 37h30.5c3.6 0 6.5-2.7 6.5-6.1 0-3-2.2-5.5-5.2-5.9-.8-5.2-5.1-9-10.5-9-4.5 0-8.4 2.6-10 6.5C15.9 22.8 12 27 12 32c0 1.9-.7 3.6-2 5Z" />
-    </svg>
-</span>
-
-            @* Weather temperature and condition. *@
+        <section class="dashboard-weather dashboard-account-summary" aria-label="Account access summary">
+            <span class="dashboard-account-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24">
+                    <path d="M12 3 20 6v6c0 5-2.9 8-8 10-5.1-2-8-5-8-10V6Z" />
+                    <path d="m9.5 12 1.7 1.7 3.7-4" />
+                </svg>
+            </span>
             <div class="dashboard-weather-copy">
-                <strong>18°C</strong>
-                <span>Partly cloudy</span>
+                <strong>@CurrentRole</strong>
+                <span>@(CurrentUser is null ? "Account loading" : $"{CurrentUser.AccountStatus} account")</span>
             </div>
         </section>
 
-        @* Vertical separator between weather and date. *@
         <span class="dashboard-summary-divider" aria-hidden="true"></span>
 
-        @* Current date summary. *@
         <section class="dashboard-date" aria-label="Current date">
-            <strong>Tuesday</strong>
-
-            <time datetime="2026-08-04">
-                4 August 2026
-            </time>
+            <strong>@CurrentLocalTime.ToString("dddd")</strong>
+            <time datetime="@CurrentDateAttribute">@CurrentLocalTime.ToString("d MMMM yyyy")</time>
         </section>
     </div>
 </header>
@@ -128,7 +73,7 @@
 
     @* =====================================================
        PRIMARY DASHBOARD WORKSPACE
-       Contains attendance, tasks, links, articles, and FAQs.
+       Contains attendance, account actions, links, guidance, and FAQs.
        ===================================================== *@
     <section class="dashboard-primary-column">
 
@@ -137,212 +82,120 @@
 
            @* =========================================================
    TIME AND ATTENDANCE CARD
-   Shows the employee’s current clocking status, today’s
-   worked hours, and the main attendance actions.
+   Uses the authenticated employee's persisted attendance data.
    ========================================================= *@
 <section class="attendance-card">
-
-    @* Card heading and link to the full timesheet. *@
     <header class="attendance-card-header">
         <h2>Time &amp; Attendance</h2>
-
-        <a href="/attendance">
-            <span>View full timesheet</span>
-            <span aria-hidden="true">→</span>
-        </a>
+        <a href="/attendance"><span>View full timesheet</span><span aria-hidden="true">→</span></a>
     </header>
 
-    @* Current time and today’s worked-hours progress. *@
     <div class="attendance-card-content">
-
-        @* Employee’s current clocking status. *@
         <div class="attendance-status">
-
-            @* Current clock time. Static for the visual build. *@
             <div class="attendance-current-time">
-                <strong>09:15</strong>
-                <span>AM</span>
+                <strong>@CurrentLocalTime.ToString("hh:mm")</strong>
+                <span>@CurrentLocalTime.ToString("tt")</span>
             </div>
 
-            <p>You’re currently clocked in.</p>
+            <p>@(AttendanceSnapshot?.OpenRecord is null ? "You’re currently clocked out." : "You’re currently clocked in.")</p>
 
-            @* Time at which the employee clocked in. *@
             <div class="attendance-since">
                 <span class="attendance-status-dot" aria-hidden="true"></span>
-                <span>Since 09:00 AM</span>
+                <span>@(AttendanceSnapshot?.OpenRecord is null
+                    ? "Ready for your next work session"
+                    : $"Since {AttendanceSnapshot.OpenRecord.ClockInAt.ToLocalTime():hh:mm tt}")</span>
             </div>
         </div>
 
-        @* Circular visual showing today’s completed hours. *@
-        <div
-            class="attendance-hours-progress"
-            role="img"
-            aria-label="One hour and fifteen minutes worked out of eight hours">
-
+        <div class="attendance-hours-progress" style="@AttendanceProgressStyle" role="img" aria-label="Today's recorded work hours">
             <div class="attendance-hours-copy">
                 <span>Today’s Hours</span>
-                <strong>01:15</strong>
+                <strong>@FormatDuration(AttendanceSnapshot?.TodayMinutes ?? 0)</strong>
                 <small>/ 08:00 hrs</small>
             </div>
         </div>
     </div>
 
-    @* Clocking actions shown at the bottom of the card. *@
     <div class="attendance-actions">
-
-        @* Main action for ending the employee’s work session. *@
-        <button class="attendance-clock-out" type="button">
+        <button class="attendance-clock-out" type="button" disabled="@AttendanceBusy" @onclick="ToggleClockAsync">
             <span class="attendance-action-icon" aria-hidden="true">
-                <svg viewBox="0 0 24 24">
-                    <circle cx="12" cy="13" r="8" />
-                    <path d="M12 9v4l3 2" />
-                    <path d="M9 2h6" />
-                    <path d="M12 2v3" />
-                </svg>
+                <svg viewBox="0 0 24 24"><circle cx="12" cy="13" r="8" /><path d="M12 9v4l3 2" /><path d="M9 2h6" /><path d="M12 2v3" /></svg>
             </span>
-
-            <span>Clock Out</span>
+            <span>@(AttendanceBusy ? "Saving…" : AttendanceSnapshot?.OpenRecord is null ? "Clock In" : "Clock Out")</span>
         </button>
 
-        @* Secondary action for beginning a scheduled break. *@
-        <button class="attendance-start-break" type="button">
+        <button class="attendance-start-break" type="button" @onclick="GoToAttendance">
             <span class="attendance-action-icon" aria-hidden="true">
-                <svg viewBox="0 0 24 24">
-                    <path d="M6 8h10v7a4 4 0 0 1-4 4h-2a4 4 0 0 1-4-4Z" />
-                    <path d="M16 10h2a2 2 0 0 1 0 4h-2" />
-                    <path d="M8 4c0 1 1 1 1 2" />
-                    <path d="M12 4c0 1 1 1 1 2" />
-                </svg>
+                <svg viewBox="0 0 24 24"><path d="M5 5h14v14H5Z" /><path d="M8 9h8" /><path d="M8 13h8" /></svg>
             </span>
-
-            <span>Start Break</span>
+            <span>View History</span>
         </button>
     </div>
+
+    @if (!string.IsNullOrWhiteSpace(AttendanceMessage))
+    {
+        <div class="dashboard-inline-status" role="status">@AttendanceMessage</div>
+    }
 </section>
 
            @* =========================================================
    WEEKLY ATTENDANCE CARD
-   Summarises the employee’s attendance across the current
-   working week using a compact five-day chart.
+   Summarises persisted attendance for the current working week.
    ========================================================= *@
 <section class="weekly-attendance-card">
-
-    @* Card heading and link to detailed attendance records. *@
     <header class="weekly-attendance-header">
         <h2>Attendance This Week</h2>
-
         <a href="/attendance">View all</a>
     </header>
 
-    @* Weekly attendance count and current status. *@
     <div class="weekly-attendance-summary">
+        <div class="weekly-attendance-count">
+            <strong class="weekly-attendance-value">
+                <span class="weekly-attendance-completed">@(AttendanceSnapshot?.DaysPresentThisWeek ?? 0)</span>
+                <span class="weekly-attendance-total">/5</span>
+            </strong>
+            <span>Days Present</span>
+        </div>
 
-       @* =========================================================
-   WEEKLY ATTENDANCE TOTAL
-   Keeps the attended-day count blue while displaying the
-   divider and total working days in a softer grey.
-   ========================================================= *@
-<div class="weekly-attendance-count">
-
-    @* Split the value so each part can use its own colour. *@
-    <strong class="weekly-attendance-value">
-        <span class="weekly-attendance-completed">4</span>
-        <span class="weekly-attendance-total">/5</span>
-    </strong>
-
-    <span>Days Present</span>
-</div>
-
-        @* Positive attendance-status label. *@
-        <span class="weekly-attendance-status">
-            On Track
-        </span>
+        <span class="weekly-attendance-status">@WeeklyStatusText</span>
     </div>
 
-    @* =====================================================
-       FIVE-DAY ATTENDANCE CHART
-       Uses static design values for now. Real attendance
-       records will later determine each day’s state.
-       ===================================================== *@
-    <div
-        class="weekly-attendance-chart"
-        role="img"
-        aria-label="Present Monday through Thursday, with Friday remaining">
-
-        @* Monday attendance. *@
-        <div class="weekly-attendance-day">
-            <span class="weekly-day-marker is-complete" aria-hidden="true">
-                ✓
-            </span>
-
-            <span class="weekly-day-bar is-present bar-monday"></span>
-            <span class="weekly-day-label">Mon</span>
-        </div>
-
-        @* Tuesday attendance. *@
-        <div class="weekly-attendance-day">
-            <span class="weekly-day-marker is-complete" aria-hidden="true">
-                ✓
-            </span>
-
-            <span class="weekly-day-bar is-present bar-tuesday"></span>
-            <span class="weekly-day-label">Tue</span>
-        </div>
-
-        @* Wednesday attendance. *@
-        <div class="weekly-attendance-day">
-            <span class="weekly-day-marker is-complete" aria-hidden="true">
-                ✓
-            </span>
-
-            <span class="weekly-day-bar is-present bar-wednesday"></span>
-            <span class="weekly-day-label">Wed</span>
-        </div>
-
-        @* Thursday is highlighted as the current working day. *@
-        <div class="weekly-attendance-day">
-            <span class="weekly-day-marker is-complete" aria-hidden="true">
-                ✓
-            </span>
-
-            <span class="weekly-day-bar is-current bar-thursday"></span>
-            <span class="weekly-day-label">Thu</span>
-        </div>
-
-        @* Friday remains incomplete. *@
-        <div class="weekly-attendance-day">
-            <span class="weekly-day-marker is-pending" aria-hidden="true"></span>
-
-            <span class="weekly-day-bar is-pending bar-friday"></span>
-            <span class="weekly-day-label">Fri</span>
-        </div>
+    <div class="weekly-attendance-chart" role="img" aria-label="Attendance status for the current working week">
+        @foreach (var day in WeekDays)
+        {
+            <div class="weekly-attendance-day">
+                <span class="weekly-day-marker @(day.IsPresent ? "is-complete" : "is-pending")" aria-hidden="true">@(day.IsPresent ? "✓" : string.Empty)</span>
+                <span class="weekly-day-bar @(day.IsToday && day.IsPresent ? "is-current" : day.IsPresent ? "is-present" : "is-pending") @day.BarClass"></span>
+                <span class="weekly-day-label">@day.Label</span>
+            </div>
+        }
     </div>
 </section>
 
         </div>
 
-        @* Middle dashboard row for tasks and quick links. *@
+        @* Middle dashboard row for account actions and quick links. *@
         <div class="dashboard-middle-card-row">
 
             @* =========================================================
-   MY TASKS CARD
-   Shows the employee’s current actions, deadlines, and
-   priority levels from the dashboard reference.
+   ACCOUNT ACTIONS CARD
+   Keeps the reference card rhythm while linking only to real
+   secure self-service workflows.
    ========================================================= *@
 <section class="tasks-card">
 
-    @* Card heading and link to the full task list. *@
+    @* Card heading and link to the employee activity history. *@
     <header class="tasks-card-header">
         <h2>My Tasks</h2>
 
-        <a href="/tasks">View all</a>
+        <a href="/account-activity">View activity</a>
     </header>
 
-    @* Current employee task list. *@
+    @* Real employee account-action links. *@
     <div class="tasks-list">
 
-        @* High-priority compliance-training task. *@
-        <article class="task-item">
+        @* Account-security action. *@
+        <a class="task-item task-item-link" href="/security">
 
             <span class="task-icon task-icon-high" aria-hidden="true">
                 <svg viewBox="0 0 24 24">
@@ -353,17 +206,15 @@
             </span>
 
             <div class="task-copy">
-                <strong>Complete Compliance Training</strong>
-                <span>Due by 20 May 2025</span>
+                <strong>Review Account Security</strong>
+                <span>Check recent sign-ins and password status</span>
             </div>
 
-            <span class="task-priority task-priority-high">
-                High
-            </span>
-        </article>
+            <span class="task-priority task-priority-high">Security</span>
+        </a>
 
-        @* Medium-priority data-policy task. *@
-        <article class="task-item">
+        @* Access-request action. *@
+        <a class="task-item task-item-link" href="/requests">
 
             <span class="task-icon task-icon-medium" aria-hidden="true">
                 <svg viewBox="0 0 24 24">
@@ -374,17 +225,15 @@
             </span>
 
             <div class="task-copy">
-                <strong>Acknowledge Updated Data Policy</strong>
-                <span>Due by 22 May 2025</span>
+                <strong>Review Access Requests</strong>
+                <span>Track pending access decisions</span>
             </div>
 
-            <span class="task-priority task-priority-medium">
-                Medium
-            </span>
-        </article>
+            <span class="task-priority task-priority-medium">Access</span>
+        </a>
 
-        @* Low-priority employee-profile task. *@
-        <article class="task-item">
+        @* Employee-profile action. *@
+        <a class="task-item task-item-link" href="/profile">
 
             <span class="task-icon task-icon-low" aria-hidden="true">
                 <svg viewBox="0 0 24 24">
@@ -398,13 +247,11 @@
                 <span>Keep your details up to date</span>
             </div>
 
-            <span class="task-priority task-priority-low">
-                Low
-            </span>
-        </article>
+            <span class="task-priority task-priority-low">Profile</span>
+        </a>
 
-        @* Low-priority payslip-review task. *@
-        <article class="task-item">
+        @* Attendance-review action. *@
+        <a class="task-item task-item-link" href="/attendance">
 
             <span class="task-icon task-icon-low" aria-hidden="true">
                 <svg viewBox="0 0 24 24">
@@ -416,19 +263,17 @@
             </span>
 
             <div class="task-copy">
-                <strong>Review May 2025 Payslip</strong>
-                <span>Available in Payroll section</span>
+                <strong>Review Attendance History</strong>
+                <span>Confirm recent clock-in and clock-out records</span>
             </div>
 
-            <span class="task-priority task-priority-low">
-                Low
-            </span>
-        </article>
+            <span class="task-priority task-priority-low">Records</span>
+        </a>
     </div>
 
     @* Link to the complete employee-task area. *@
-    <a class="tasks-card-footer-link" href="/tasks">
-        <span>Go to all tasks</span>
+    <a class="tasks-card-footer-link" href="/account-activity">
+        <span>Review account activity</span>
         <span aria-hidden="true">→</span>
     </a>
 </section>
@@ -447,11 +292,11 @@
 
     @* =====================================================
        QUICK-LINK GRID
-       Displays eight employee services in two rows.
+       Displays the core employee self-service destinations.
        ===================================================== *@
     <div class="quick-links-grid">
 
-        @* Request-leave shortcut. *@
+        @* Access-request shortcut. *@
         <a class="quick-link-item" href="/requests">
             <span class="quick-link-icon" aria-hidden="true">
                 <svg viewBox="0 0 24 24">
@@ -465,11 +310,11 @@
                 </svg>
             </span>
 
-            <span>Request Leave</span>
+            <span>Access Requests</span>
         </a>
 
-        @* Payslip shortcut. *@
-        <a class="quick-link-item" href="/payroll">
+        @* Attendance-history shortcut. *@
+        <a class="quick-link-item" href="/attendance">
             <span class="quick-link-icon" aria-hidden="true">
                 <svg viewBox="0 0 24 24">
                     <path d="M7 3h8l4 4v14H7Z" />
@@ -479,11 +324,11 @@
                 </svg>
             </span>
 
-            <span>My Payslip</span>
+            <span>My Attendance</span>
         </a>
 
-        @* Employee-documents shortcut. *@
-        <a class="quick-link-item" href="/documents">
+        @* Employee-profile shortcut. *@
+        <a class="quick-link-item" href="/profile">
             <span class="quick-link-icon" aria-hidden="true">
                 <svg viewBox="0 0 24 24">
                     <path d="M3 7h7l2 2h9v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Z" />
@@ -491,11 +336,11 @@
                 </svg>
             </span>
 
-            <span>My Documents</span>
+            <span>My Profile</span>
         </a>
 
-        @* Employee-benefits shortcut. *@
-        <a class="quick-link-item" href="/benefits">
+        @* Account-security shortcut. *@
+        <a class="quick-link-item" href="/security">
             <span class="quick-link-icon" aria-hidden="true">
                 <svg viewBox="0 0 24 24">
                     <rect x="3" y="9" width="18" height="12" rx="1" />
@@ -506,11 +351,11 @@
                 </svg>
             </span>
 
-            <span>Benefits</span>
+            <span>My Security</span>
         </a>
 
-        @* Reimbursement shortcut. *@
-        <a class="quick-link-item" href="/requests">
+        @* Account-activity shortcut. *@
+        <a class="quick-link-item" href="/account-activity">
             <span class="quick-link-icon" aria-hidden="true">
                 <svg viewBox="0 0 24 24">
                     <rect x="3" y="6" width="18" height="14" rx="2" />
@@ -521,34 +366,7 @@
                 </svg>
             </span>
 
-            <span>Apply Reimbursement</span>
-        </a>
-
-        @* Company-directory shortcut. *@
-        <a class="quick-link-item" href="/directory">
-            <span class="quick-link-icon" aria-hidden="true">
-                <svg viewBox="0 0 24 24">
-                    <circle cx="8" cy="8" r="3" />
-                    <circle cx="17" cy="9" r="2.5" />
-                    <path d="M2.5 20c.3-4.4 2.1-6.5 5.5-6.5s5.2 2.1 5.5 6.5" />
-                    <path d="M14 14.5c3.7-.5 6.5 1.2 7.5 5.5" />
-                </svg>
-            </span>
-
-            <span>Company Directory</span>
-        </a>
-
-        @* Learning-portal shortcut. *@
-        <a class="quick-link-item" href="/learning">
-            <span class="quick-link-icon" aria-hidden="true">
-                <svg viewBox="0 0 24 24">
-                    <path d="m3 9 9-5 9 5-9 5Z" />
-                    <path d="M7 12.5V17c3 2 7 2 10 0v-4.5" />
-                    <path d="M21 9v6" />
-                </svg>
-            </span>
-
-            <span>Learning Portal</span>
+            <span>Account Activity</span>
         </a>
 
         @* Help-and-support shortcut. *@
@@ -567,8 +385,8 @@
     </div>
 
     @* Link to the broader employee-services area. *@
-    <a class="quick-links-footer" href="/services">
-        <span>Explore all services</span>
+    <a class="quick-links-footer" href="/support">
+        <span>Open Help &amp; Support</span>
         <span aria-hidden="true">→</span>
     </a>
 </section>
@@ -598,7 +416,7 @@
        ===================================================== *@
     <div class="helpful-articles-list">
 
-        @* Leave-request guidance article. *@
+        @* Access-request guidance article. *@
         <a class="helpful-article-item" href="/support">
 
             @* Article document icon. *@
@@ -613,12 +431,12 @@
 
             @* Article title and description. *@
             <span class="helpful-article-copy">
-                <strong>How to Request Time Off</strong>
-                <span>A step-by-step guide to submitting your leave request.</span>
+                <strong>How Access Requests Work</strong>
+                <span>Understand how protected access is requested and reviewed.</span>
             </span>
         </a>
 
-        @* Payslip-understanding article. *@
+        @* Attendance guidance article. *@
         <a class="helpful-article-item" href="/support">
 
             @* Article document icon. *@
@@ -633,12 +451,12 @@
 
             @* Article title and description. *@
             <span class="helpful-article-copy">
-                <strong>Understanding Your Payslip</strong>
-                <span>Breakdown of your payslip and important components.</span>
+                <strong>Using Time &amp; Attendance</strong>
+                <span>Clock in, clock out and review your own attendance records.</span>
             </span>
         </a>
 
-        @* Benefits-enrolment article. *@
+        @* Account-protection article. *@
         <a class="helpful-article-item" href="/support">
 
             @* Article document icon. *@
@@ -653,15 +471,15 @@
 
             @* Article title and description. *@
             <span class="helpful-article-copy">
-                <strong>Benefits Enrollment Guide</strong>
-                <span>Learn how to enrol in company benefits and make the most of them.</span>
+                <strong>Protecting Your Employee Account</strong>
+                <span>Password, sign-in and account-security guidance.</span>
             </span>
         </a>
     </div>
 
     @* Link to the complete employee help centre. *@
     <a class="helpful-articles-footer" href="/support">
-        <span>Visit Help Center</span>
+        <span>Open Help &amp; Support</span>
         <span aria-hidden="true">→</span>
     </a>
 </section>
@@ -669,8 +487,7 @@
             @* =========================================================
    FREQUENTLY ASKED QUESTIONS CARD
    Gives employees quick access to common portal questions.
-   The accordion controls are visual for now; opening and
-   closing behaviour will be implemented later.
+   Each question opens the functioning Secure Assistant with the question preloaded.
    ========================================================= *@
 <section class="faq-card">
 
@@ -687,14 +504,14 @@
        ===================================================== *@
     <div class="faq-list">
 
-        @* Leave-application question. *@
-        <button class="faq-item" type="button">
+        @* Access-request question. *@
+        <button class="faq-item" type="button" @onclick="AskAccessQuestion">
             <span class="faq-question-icon" aria-hidden="true">
                 ?
             </span>
 
             <span class="faq-question-text">
-                How do I apply for leave?
+                How do I request protected access?
             </span>
 
             <span class="faq-chevron" aria-hidden="true">
@@ -705,7 +522,7 @@
         </button>
 
         @* Personal-information question. *@
-        <button class="faq-item" type="button">
+        <button class="faq-item" type="button" @onclick="AskProfileQuestion">
             <span class="faq-question-icon" aria-hidden="true">
                 ?
             </span>
@@ -721,14 +538,14 @@
             </span>
         </button>
 
-        @* Payslip-generation question. *@
-        <button class="faq-item" type="button">
+        @* Account-status question. *@
+        <button class="faq-item" type="button" @onclick="AskSuspendedAccountQuestion">
             <span class="faq-question-icon" aria-hidden="true">
                 ?
             </span>
 
             <span class="faq-question-text">
-                When are payslips generated?
+                What happens if my account is suspended?
             </span>
 
             <span class="faq-chevron" aria-hidden="true">
@@ -738,14 +555,14 @@
             </span>
         </button>
 
-        @* HR-contact question. *@
-        <button class="faq-item" type="button">
+        @* Account-activity question. *@
+        <button class="faq-item" type="button" @onclick="AskActivityQuestion">
             <span class="faq-question-icon" aria-hidden="true">
                 ?
             </span>
 
             <span class="faq-question-text">
-                How do I contact the HR team?
+                Where can I review sign-in activity?
             </span>
 
             <span class="faq-chevron" aria-hidden="true">
@@ -763,31 +580,30 @@
 
     @* =====================================================
        DASHBOARD INFORMATION COLUMN
-       Contains announcements, events, and employee help.
+       Contains security guidance, an account timeline, and employee help.
        ===================================================== *@
     <aside class="dashboard-information-column">
 
        @* =========================================================
    LATEST ANNOUNCEMENTS CARD
-   Shows recent company notices, operational updates, and
-   employee programmes in the dashboard information column.
+   Keeps the approved announcement-card treatment with security and access notices relevant to the authenticated employee.
    ========================================================= *@
 <section class="announcements-card">
 
-    @* Card heading and link to the complete announcement list. *@
+    @* Card heading and link to the wider support area. *@
     <header class="announcements-card-header">
         <h2>Latest Announcements</h2>
 
-        <a href="/announcements">View all</a>
+        <a href="/support">Help &amp; Support</a>
     </header>
 
     @* =====================================================
        ANNOUNCEMENT LIST
-       Displays the three latest employee-facing notices.
+       Displays three practical employee-facing portal notices.
        ===================================================== *@
     <div class="announcements-list">
 
-        @* Updated leave-policy announcement. *@
+        @* Account-security guidance. *@
         <article class="announcement-item">
 
             @* Purple policy-document icon. *@
@@ -803,18 +619,17 @@
 
             @* Announcement wording and publication date. *@
             <div class="announcement-copy">
-                <strong>Updated Leave Policy</strong>
+                <strong>Account Security Reminder</strong>
 
                 <p>
-                    Please review the updated leave policy effective
-                    1 June 2025.
+                    Review recent sign-in activity and update your password if anything looks unfamiliar.
                 </p>
 
-                <time datetime="2025-05-14">14 May 2025</time>
+                <span class="announcement-meta">Account protection</span>
             </div>
         </article>
 
-        @* Scheduled system-maintenance announcement. *@
+        @* Password-recovery guidance. *@
         <article class="announcement-item">
 
             @* Orange maintenance icon. *@
@@ -826,18 +641,17 @@
 
             @* Announcement wording and publication date. *@
             <div class="announcement-copy">
-                <strong>System Maintenance</strong>
+                <strong>Password Reset Protection</strong>
 
                 <p>
-                    HR system will be unavailable on 18 May 2025
-                    from 01:00 AM to 05:00 AM.
+                    Password-reset responses stay neutral so the portal does not reveal whether an email address exists.
                 </p>
 
-                <time datetime="2025-05-13">13 May 2025</time>
+                <span class="announcement-meta">Privacy-safe recovery</span>
             </div>
         </article>
 
-        @* Employee wellness-programme announcement. *@
+        @* Access-review guidance. *@
         <article class="announcement-item">
 
             @* Green wellness icon. *@
@@ -850,115 +664,60 @@
 
             @* Announcement wording and publication date. *@
             <div class="announcement-copy">
-                <strong>Wellness Program</strong>
+                <strong>Access Requests</strong>
 
                 <p>
-                    Join our new 6-week wellness challenge starting
-                    26 May!
+                    Requests for protected resources require an authorised administrator decision.
                 </p>
 
-                <time datetime="2025-05-12">12 May 2025</time>
+                <span class="announcement-meta">Authorised review</span>
             </div>
         </article>
     </div>
 
-    @* Link to the complete company-announcement area. *@
-    <a class="announcements-card-footer" href="/announcements">
-        <span>View all announcements</span>
+    @* Keep the reference-style footer while routing to the real support area. *@
+    <a class="announcements-card-footer" href="/support">
+        <span>Open Help &amp; Support</span>
         <span aria-hidden="true">→</span>
     </a>
 </section>
 
       @* =========================================================
-   UPCOMING EVENTS CARD
-   Shows the employee’s next company meetings, town halls,
-   and wellbeing events.
+   ACCOUNT TIMELINE CARD
+   Uses real Identity timestamps rather than invented meetings or
+   calendar data, keeping the dashboard honest and security-focused.
    ========================================================= *@
 <section class="upcoming-events-card">
-
-    @* Card heading and link to the complete company calendar. *@
     <header class="upcoming-events-header">
-        <h2>Upcoming Events</h2>
-
-        <a href="/events">View calendar</a>
+        <h2>Account Timeline</h2>
+        <a href="/account-activity">View activity</a>
     </header>
 
-    @* =====================================================
-       UPCOMING EVENT LIST
-       Displays the next three employee-facing events.
-       ===================================================== *@
     <div class="upcoming-events-list">
-
-        @* Team stand-up event. *@
-        <article class="upcoming-event-item">
-
-            @* Compact calendar-date tile. *@
-            <time class="event-date-card" datetime="2026-08-06">
-                <span>AUG</span>
-                <strong>06</strong>
-            </time>
-
-            @* Event details. *@
-            <div class="event-details">
-                <div class="event-title-row">
-                    <span class="event-status-dot event-status-green" aria-hidden="true"></span>
-                    <strong>Team Stand-up</strong>
+        @foreach (var item in AccountTimeline)
+        {
+            <article class="upcoming-event-item">
+                <time class="event-date-card" datetime="@item.When.ToString("yyyy-MM-dd")">
+                    <span>@item.When.ToLocalTime().ToString("MMM").ToUpperInvariant()</span>
+                    <strong>@item.When.ToLocalTime().ToString("dd")</strong>
+                </time>
+                <div class="event-details">
+                    <div class="event-title-row">
+                        <span class="event-status-dot @item.DotClass" aria-hidden="true"></span>
+                        <strong>@item.Title</strong>
+                    </div>
+                    <span>@item.Detail</span>
+                    <small>@item.When.ToLocalTime().ToString("HH:mm")</small>
                 </div>
-
-                <span>10:00 AM – 10:30 AM</span>
-                <small>Zoom Meeting</small>
-            </div>
-        </article>
-
-        @* HR town-hall event. *@
-        <article class="upcoming-event-item">
-
-            @* Compact calendar-date tile. *@
-            <time class="event-date-card" datetime="2026-08-12">
-                <span>AUG</span>
-                <strong>12</strong>
-            </time>
-
-            @* Event details. *@
-            <div class="event-details">
-                <div class="event-title-row">
-                    <span class="event-status-dot event-status-blue" aria-hidden="true"></span>
-                    <strong>HR Town Hall</strong>
-                </div>
-
-                <span>11:00 AM – 12:00 PM</span>
-                <small>Main Auditorium</small>
-            </div>
-        </article>
-
-        @* Employee-wellness webinar. *@
-        <article class="upcoming-event-item">
-
-            @* Compact calendar-date tile. *@
-            <time class="event-date-card" datetime="2026-08-19">
-                <span>AUG</span>
-                <strong>19</strong>
-            </time>
-
-            @* Event details. *@
-            <div class="event-details">
-                <div class="event-title-row">
-                    <span class="event-status-dot event-status-purple" aria-hidden="true"></span>
-                    <strong>Wellness Webinar</strong>
-                </div>
-
-                <span>03:00 PM – 04:00 PM</span>
-                <small>Virtual Event</small>
-            </div>
-        </article>
+            </article>
+        }
     </div>
 </section>
 
        @* =========================================================
    EMPLOYEE HELP CARD
-   Gives employees quick access to the HR support assistant.
-   The temporary inline robot can later be replaced with a
-   dedicated PNG, WebP, or SVG image.
+   Gives employees quick access to concise portal support
+   without expanding the project into a full support centre.
    ========================================================= *@
 <section class="dashboard-help-card">
 
@@ -967,19 +726,18 @@
         <h2>Need help?</h2>
 
         <p>
-            Get quick answers or connect with the HR support team.
+            Get quick answers about your account, attendance, access and security.
         </p>
 
-        @* Visual button for opening the future HR assistant. *@
-        <button class="dashboard-help-button" type="button">
-            Chat with HR Bot
+        <button class="dashboard-help-button" type="button" @onclick="OpenAssistant">
+            Chat with Secure Assistant
         </button>
     </div>
 
     @* =====================================================
-       TEMPORARY HR ASSISTANT ILLUSTRATION
-       This SVG occupies the final image position and can be
-       swapped later without rebuilding the card.
+       HELP ILLUSTRATION
+       Decorative assistant artwork retained from the approved
+       visual design.
        ===================================================== *@
     <div class="dashboard-help-robot" aria-hidden="true">
         <svg viewBox="0 0 150 170">
@@ -1084,4 +842,353 @@
     </aside>
 </div>
 
+@if (!AssistantOpen)
+{
+    <button class="secure-assistant-launcher" type="button" @onclick="OpenAssistant" aria-label="Open Secure Assistant">
+        <img src="images/secure-assistant-icon.svg" alt="" aria-hidden="true" />
+        <span>Ask Secure Assistant</span>
+    </button>
+}
+else
+{
+    <section class="secure-assistant-panel" role="dialog" aria-modal="false" aria-labelledby="secure-assistant-title">
+        <header class="secure-assistant-header">
+            <div class="secure-assistant-identity">
+                <span class="secure-assistant-avatar" aria-hidden="true">
+                    <img src="images/secure-assistant-icon.svg" alt="" />
+                </span>
+                <div>
+                    <strong id="secure-assistant-title">Secure Assistant</strong>
+                    <span><i aria-hidden="true"></i> Online · Portal help</span>
+                </div>
+            </div>
+            <button class="secure-assistant-close" type="button" @onclick="CloseAssistant" aria-label="Close Secure Assistant">×</button>
+        </header>
+
+        <div id="secure-assistant-messages" class="secure-assistant-messages" aria-live="polite" aria-label="Secure Assistant conversation">
+            @foreach (var message in AssistantMessages)
+            {
+                <article class="secure-assistant-message @(message.IsUser ? "is-user" : "is-assistant")">
+                    @if (!message.IsUser)
+                    {
+                        <img class="secure-assistant-message-avatar" src="images/secure-assistant-icon.svg" alt="" aria-hidden="true" />
+                    }
+                    <div class="secure-assistant-bubble">
+                        <p>@message.Text</p>
+                        @if (!string.IsNullOrWhiteSpace(message.ActionHref) && !string.IsNullOrWhiteSpace(message.ActionLabel))
+                        {
+                            <a class="secure-assistant-action" href="@message.ActionHref">@message.ActionLabel <span aria-hidden="true">→</span></a>
+                        }
+                    </div>
+                </article>
+            }
+        </div>
+
+        <div class="secure-assistant-suggestions" aria-label="Suggested questions">
+            @foreach (var suggestion in AssistantSuggestions)
+            {
+                <button type="button" @onclick="() => AskSuggestion(suggestion)">@suggestion</button>
+            }
+        </div>
+
+        @if (!string.IsNullOrWhiteSpace(AssistantError))
+        {
+            <p class="secure-assistant-error" role="alert">@AssistantError</p>
+        }
+
+        <div class="secure-assistant-composer">
+            <label class="visually-hidden" for="secure-assistant-input">Ask Secure Assistant a question</label>
+            <input
+                id="secure-assistant-input"
+                type="text"
+                maxlength="240"
+                placeholder="Type a message…"
+                autocomplete="off"
+                @bind="AssistantInput"
+                @bind:event="oninput"
+                @onkeydown="HandleAssistantKeyDown" />
+            <button type="button" @onclick="SendAssistantMessage" disabled="@string.IsNullOrWhiteSpace(AssistantInput)" aria-label="Send message">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m4 4 17 8-17 8 3-8Z" /><path d="M7 12h14" /></svg>
+            </button>
+        </div>
+    </section>
+}
+
 </section>
+
+@code {
+    // Authenticated dashboard state is loaded from Identity and the attendance database.
+    private string DisplayFirstName { get; set; } = "Employee";
+    private string CurrentRole { get; set; } = "Employee";
+    private ApplicationUser? CurrentUser { get; set; }
+    private AttendanceSnapshot? AttendanceSnapshot { get; set; }
+    private bool AttendanceBusy { get; set; }
+    private string? AttendanceMessage { get; set; }
+    private DateTimeOffset CurrentLocalTime => DateTimeOffset.Now;
+    private string CurrentDateAttribute => CurrentLocalTime.ToString("yyyy-MM-dd");
+    private string Greeting => CurrentLocalTime.Hour switch { < 12 => "Good morning", < 18 => "Good afternoon", _ => "Good evening" };
+    private int AttendanceProgressPercent => Math.Clamp((int)Math.Round((AttendanceSnapshot?.TodayMinutes ?? 0) / 480d * 100), 0, 100);
+    private string AttendanceProgressStyle => $"--attendance-progress: {AttendanceProgressPercent}%;";
+
+    [SupplyParameterFromQuery(Name = "assistant")]
+    private string? AssistantQuery { get; set; }
+
+    private bool AssistantOpen { get; set; }
+    private string AssistantInput { get; set; } = string.Empty;
+    private string? AssistantError { get; set; }
+    private const int MaxAssistantMessages = 40;
+    private bool AssistantNeedsFocus { get; set; }
+    private bool AssistantNeedsScroll { get; set; }
+    private List<DashboardAssistantMessage> AssistantMessages { get; } = [];
+    private static readonly string[] AssistantSuggestions =
+    [
+        "How do I request access?",
+        "Where can I change my password?",
+        "Am I clocked in?",
+        "What is my account status?"
+    ];
+
+
+    private IReadOnlyList<AccountTimelineItem> AccountTimeline
+    {
+        get
+        {
+            if (CurrentUser is null)
+            {
+                return [];
+            }
+
+            var passwordDate = CurrentUser.LastPasswordChangeAt ?? CurrentUser.CreatedAt;
+            var passwordDetail = CurrentUser.LastPasswordChangeAt is null
+                ? "No password change recorded since account creation"
+                : "Password last changed";
+
+            return
+            [
+                new(CurrentUser.LastLoginAt ?? CurrentUser.CreatedAt, "Latest sign-in", CurrentUser.LastLoginAt is null ? "No successful sign-in recorded yet" : "Successful authenticated session", "event-status-green"),
+                new(passwordDate, "Password status", passwordDetail, "event-status-blue"),
+                new(CurrentUser.CreatedAt, "Account created", $"{CurrentRole} access · {CurrentUser.AccountStatus}", "event-status-purple")
+            ];
+        }
+    }
+
+    private string WeeklyStatusText => (AttendanceSnapshot?.DaysPresentThisWeek ?? 0) switch
+    {
+        >= 5 => "Week Complete",
+        >= 3 => "On Track",
+        >= 1 => "In Progress",
+        _ => "No Records Yet"
+    };
+
+    private IReadOnlyList<WeekDayItem> WeekDays
+    {
+        get
+        {
+            var today = DateTimeOffset.Now.Date;
+            var monday = today.AddDays(-(((int)DateTimeOffset.Now.DayOfWeek + 6) % 7));
+            var presentDates = AttendanceSnapshot?.History
+                .Select(record => record.ClockInAt.ToLocalTime().Date)
+                .ToHashSet() ?? [];
+
+            var labels = new[] { "Mon", "Tue", "Wed", "Thu", "Fri" };
+            var bars = new[] { "bar-monday", "bar-tuesday", "bar-wednesday", "bar-thursday", "bar-friday" };
+            return Enumerable.Range(0, 5)
+                .Select(index => new WeekDayItem(
+                    labels[index],
+                    bars[index],
+                    presentDates.Contains(monday.AddDays(index)),
+                    monday.AddDays(index) == today))
+                .ToList();
+        }
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        CurrentUser = await UserManager.GetUserAsync(authState.User);
+
+        if (CurrentUser is not null)
+        {
+            DisplayFirstName = string.IsNullOrWhiteSpace(CurrentUser.FirstName) ? "Employee" : CurrentUser.FirstName;
+            CurrentRole = (await UserManager.GetRolesAsync(CurrentUser)).FirstOrDefault() ?? "Employee";
+            AttendanceSnapshot = await AttendanceService.GetSnapshotAsync(CurrentUser.Id, 30);
+        }
+
+        EnsureAssistantWelcomeMessage();
+
+    }
+
+    protected override void OnParametersSet()
+    {
+        // Query-string launch requests can arrive while the dashboard component is
+        // already alive (for example, clicking the top-bar help control while on
+        // /dashboard). Handle them on parameter updates, not only at initialization.
+        if (string.Equals(AssistantQuery, "open", StringComparison.OrdinalIgnoreCase))
+        {
+            AssistantOpen = true;
+            AssistantError = null;
+            AssistantNeedsFocus = true;
+            AssistantNeedsScroll = true;
+            EnsureAssistantWelcomeMessage();
+        }
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (AssistantNeedsFocus)
+        {
+            AssistantNeedsFocus = false;
+            await JSRuntime.InvokeVoidAsync("securePortalAssistant.focusInput");
+        }
+
+        if (AssistantNeedsScroll)
+        {
+            AssistantNeedsScroll = false;
+            await JSRuntime.InvokeVoidAsync("securePortalAssistant.scrollToLatest");
+        }
+    }
+
+    private async Task ToggleClockAsync()
+    {
+        if (CurrentUser is null || AttendanceBusy) return;
+
+        AttendanceBusy = true;
+        try
+        {
+            var result = AttendanceSnapshot?.OpenRecord is null
+                ? await AttendanceService.ClockInAsync(CurrentUser.Id)
+                : await AttendanceService.ClockOutAsync(CurrentUser.Id);
+
+            AttendanceMessage = result.Message;
+            AttendanceSnapshot = await AttendanceService.GetSnapshotAsync(CurrentUser.Id, 30);
+        }
+        finally
+        {
+            AttendanceBusy = false;
+        }
+    }
+
+    private void OpenAssistant()
+    {
+        AssistantOpen = true;
+        AssistantError = null;
+        AssistantNeedsFocus = true;
+        AssistantNeedsScroll = true;
+        EnsureAssistantWelcomeMessage();
+    }
+
+    private void OpenAssistantWithQuestion(string question)
+    {
+        AssistantOpen = true;
+        AssistantInput = question;
+        AssistantError = null;
+        EnsureAssistantWelcomeMessage();
+        SendAssistantMessage();
+        AssistantNeedsFocus = true;
+    }
+
+    private void CloseAssistant()
+    {
+        AssistantOpen = false;
+
+        // Clear the launch query after the panel is closed. Without this, clicking
+        // the top-bar Need help? link again while already on /dashboard?assistant=open
+        // can navigate to the same URI and fail to trigger another parameter update.
+        if (string.Equals(AssistantQuery, "open", StringComparison.OrdinalIgnoreCase))
+        {
+            AssistantQuery = null;
+            NavigationManager.NavigateTo("/dashboard", replace: true);
+        }
+    }
+
+    private void AskAccessQuestion() => OpenAssistantWithQuestion("How do I request protected access?");
+
+    private void AskProfileQuestion() => OpenAssistantWithQuestion("How can I update my personal information?");
+
+    private void AskSuspendedAccountQuestion() => OpenAssistantWithQuestion("What happens if my account is suspended?");
+
+    private void AskActivityQuestion() => OpenAssistantWithQuestion("Where can I review sign-in activity?");
+
+    private void AskSuggestion(string suggestion)
+    {
+        AssistantInput = suggestion;
+        SendAssistantMessage();
+    }
+
+    private void SendAssistantMessage()
+    {
+        var input = AssistantInput.Trim();
+        if (input.Length == 0)
+        {
+            AssistantError = "Type a question before sending.";
+            return;
+        }
+
+        AssistantError = null;
+        AssistantMessages.Add(new(true, input));
+        AssistantInput = string.Empty;
+
+        try
+        {
+            var reply = SecureAssistantService.GetReply(
+                input,
+                CurrentRole,
+                CurrentUser?.AccountStatus ?? AccountStatus.Active,
+                AttendanceSnapshot?.OpenRecord is not null,
+                AttendanceSnapshot?.TodayMinutes);
+
+            AssistantMessages.Add(new(false, reply.Message, reply.ActionLabel, reply.ActionHref));
+            TrimAssistantHistory();
+            AssistantNeedsScroll = true;
+        }
+        catch
+        {
+            AssistantError = "Secure Assistant could not respond. Use Help & Support for the available self-service routes.";
+        }
+    }
+
+    private void HandleAssistantKeyDown(Microsoft.AspNetCore.Components.Web.KeyboardEventArgs args)
+    {
+        if (args.Key == "Escape")
+        {
+            CloseAssistant();
+            return;
+        }
+
+        if (args.Key == "Enter" && !string.IsNullOrWhiteSpace(AssistantInput))
+        {
+            SendAssistantMessage();
+        }
+    }
+
+    private void EnsureAssistantWelcomeMessage()
+    {
+        if (AssistantMessages.Count != 0) return;
+
+        AssistantMessages.Add(new(
+            false,
+            $"Hi {DisplayFirstName}. I’m the Secure Assistant. I can help with account access, passwords, attendance, profile updates, requests and recent account activity."));
+    }
+
+    private void TrimAssistantHistory()
+    {
+        while (AssistantMessages.Count > MaxAssistantMessages)
+        {
+            AssistantMessages.RemoveAt(0);
+        }
+    }
+
+    private void GoToSupport() => NavigationManager.NavigateTo("/support");
+
+    private void GoToAttendance() => NavigationManager.NavigateTo("/attendance");
+
+    private static string FormatDuration(int minutes) => $"{minutes / 60:00}:{minutes % 60:00}";
+
+    private sealed record WeekDayItem(string Label, string BarClass, bool IsPresent, bool IsToday);
+    private sealed record AccountTimelineItem(DateTimeOffset When, string Title, string Detail, string DotClass);
+    private sealed record DashboardAssistantMessage(
+        bool IsUser,
+        string Text,
+        string? ActionLabel = null,
+        string? ActionHref = null);
+}

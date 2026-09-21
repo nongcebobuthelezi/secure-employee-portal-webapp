@@ -1,7 +1,8 @@
 .login-shell {
     width: min(1290px, calc(100vw - 72px));
-height: auto;
-min-height: min(880px, calc(100vh - 72px));
+    /* Registration may grow with validation content, but never compress below the approved desktop composition. */
+    height: auto;
+    min-height: clamp(760px, calc(100vh - 72px), 880px);
     display: grid;
     grid-template-columns: 1fr 1fr;
     overflow: hidden;
@@ -387,7 +388,7 @@ padding: 38px 58px;
 }
 
 /* =========================================================
-   ENTERPRISE SECURE BADGE
+   IDENTITY SECURITY BADGE
    Preserves the existing badge dimensions and position while
    aligning the new shield icon cleanly with the text.
    ========================================================= */
@@ -870,7 +871,12 @@ margin: 10px 0 24px;
 
 @media (max-width: 950px) {
     .login-shell {
+        width: 100%;
+        height: auto;
+        min-height: 100vh;
         grid-template-columns: 1fr;
+        border-radius: 0;
+        overflow: visible;
     }
 
    .login-visual-panel {
@@ -1036,4 +1042,27 @@ margin: 10px 0 24px;
 
     /* Preserve the existing error colour. */
     color: #dc2626;
+}
+
+/* Keep the required acknowledgement and account-level errors aligned
+   with the existing registration form without introducing a new visual system. */
+.registration-terms-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.registration-errors {
+    padding: 12px 14px;
+    border: 1px solid #fecaca;
+    border-radius: 10px;
+    background: #fef2f2;
+    color: #991b1b;
+    font-size: 12px;
+    line-height: 1.45;
+}
+
+.registration-errors ul {
+    margin: 6px 0 0;
+    padding-left: 18px;
 }
