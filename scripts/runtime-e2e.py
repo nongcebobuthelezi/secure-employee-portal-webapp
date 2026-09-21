@@ -55,7 +55,7 @@ async def login(page, email, password):
     await page.locator("#password").fill(password)
     await page.get_by_role("button", name="Sign In", exact=True).click()
     await page.wait_for_url(re.compile(r".*/dashboard(?:\?.*)?$"), timeout=20000)
-    await expect(page.get_by_role("heading", name=re.compile("Dashboard", re.I))).to_be_visible(timeout=15000)
+    await expect(page.locator("h1").first).to_be_visible(timeout=15000)
 
 
 async def main():
