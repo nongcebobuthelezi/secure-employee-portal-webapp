@@ -170,6 +170,8 @@ async def main():
         await expect(page.get_by_role("heading", name="Access denied")).to_be_visible(timeout=15000)
         await snap(page, "11-access-denied-desktop.png", "Access denied")
 
+        # This navigation also guards the dashboard against shared-DbContext
+        # initialization regressions after an authorization boundary.
         # Return to the authenticated shell before exercising the normal
         # POST/antiforgery logout control.
         await page.goto(BASE_URL + "/dashboard", wait_until="domcontentloaded")
