@@ -1,6 +1,6 @@
 # Recruiter Demo Script
 
-This is the concise demonstration path for Secure Employee Portal. It is designed for a portfolio review or interview and should take roughly five to eight minutes once the exact release candidate has passed the final runtime gate.
+This is the concise demonstration path for the **runtime-verified** Secure Employee Portal portfolio build. It is designed for a portfolio review or interview and should take roughly five to eight minutes.
 
 ## 1. Start with the engineering problem
 
@@ -93,9 +93,12 @@ Point out that passwords, reset tokens and application secrets are deliberately 
 Close with the release/testing story:
 
 - Release build treats compiler/analyzer warnings as errors;
-- the source represents **74 expected automated test executions**;
+- the verified Release build completed with 0 warnings and 0 errors;
+- **74 / 74 automated tests passed**;
 - CI and the local verification script fail if the discovered test inventory is not exactly 74;
-- Entity Framework model/migration alignment is part of the release gate;
-- a manual security/workflow checklist complements automated tests because an earlier static-SSR form-binding defect was found only through browser testing.
+- Entity Framework reported no pending model changes;
+- the SQL-backed Playwright journey passed across employee and administrator workflows;
+- 26 runtime screenshots were captured with zero document-level horizontal-overflow failures;
+- browser testing complements automated tests because it exposed interaction/layout issues that source checks alone did not reproduce.
 
-Do not claim that the newest package has passed 74/74 until that exact runtime gate has actually been executed successfully.
+The full evidence record is in `docs/runtime-verification.md`, with the interface gallery in `docs/interface-gallery.md`.
