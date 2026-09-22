@@ -6,9 +6,11 @@
 @inherits LayoutComponentBase
 @using Microsoft.AspNetCore.Components.Authorization
 @using Microsoft.AspNetCore.Identity
+@using Microsoft.EntityFrameworkCore
+@using System.Security.Claims
 @using SecureEmployeePortal.Data
 @inject AuthenticationStateProvider AuthenticationStateProvider
-@inject UserManager<ApplicationUser> UserManager
+@inject IDbContextFactory<ApplicationDbContext> DbFactory
 
 <div class="employee-shell">
     <aside class="employee-sidebar" id="employee-sidebar">
@@ -205,21 +207,36 @@
     protected override async Task OnInitializedAsync()
     {
         var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
-        var user = await UserManager.GetUserAsync(authState.User);
+        var userId = authState.User.FindFirstValue(ClaimTypes.NameIdentifier);
 
-        if (user is not null)
+        if (string.IsNullOrWhiteSpace(userId))
         {
-            EmployeeName = string.IsNullOrWhiteSpace(user.FullName)
-                ? user.Email ?? "Employee"
-                : user.FullName;
+            return;
+        }
 
-            var firstInitial = string.IsNullOrWhiteSpace(user.FirstName) ? string.Empty : user.FirstName[..1];
-            var lastInitial = string.IsNullOrWhiteSpace(user.LastName) ? string.Empty : user.LastName[..1];
-            EmployeeInitials = $"{firstInitial}{lastInitial}".ToUpperInvariant();
-            if (string.IsNullOrWhiteSpace(EmployeeInitials))
-            {
-                EmployeeInitials = "EP";
-            }
+        // Layout and page components initialize concurrently during interactive
+        // navigation. Use an isolated factory context so identity reads in the
+        // shared shell never contend with page-level EF/Identity operations.
+        await using var db = await DbFactory.CreateDbContextAsync();
+        var user = await db.Users
+            .AsNoTracking()
+            .SingleOrDefaultAsync(candidate => candidate.Id == userId);
+
+        if (user is null)
+        {
+            return;
+        }
+
+        EmployeeName = string.IsNullOrWhiteSpace(user.FullName)
+            ? user.Email ?? "Employee"
+            : user.FullName;
+
+        var firstInitial = string.IsNullOrWhiteSpace(user.FirstName) ? string.Empty : user.FirstName[..1];
+        var lastInitial = string.IsNullOrWhiteSpace(user.LastName) ? string.Empty : user.LastName[..1];
+        EmployeeInitials = $"{firstInitial}{lastInitial}".ToUpperInvariant();
+        if (string.IsNullOrWhiteSpace(EmployeeInitials))
+        {
+            EmployeeInitials = "EP";
         }
     }
 }
