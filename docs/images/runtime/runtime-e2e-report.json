@@ -23,6 +23,11 @@
       "horizontal_overflow_px": 0
     },
     {
+      "page": "Secure Assistant",
+      "url": "http://127.0.0.1:5080/dashboard?assistant=open",
+      "horizontal_overflow_px": 0
+    },
+    {
       "page": "Employee profile",
       "url": "http://127.0.0.1:5080/profile",
       "horizontal_overflow_px": 0
@@ -74,7 +79,7 @@
     },
     {
       "page": "Employee account administration",
-      "url": "http://127.0.0.1:5080/admin/users/561c0701-b650-4a93-9ada-4fd8653fd5bf",
+      "url": "http://127.0.0.1:5080/admin/users/488d5d1a-2a88-4386-84c8-7d187f668129",
       "horizontal_overflow_px": 0
     },
     {
@@ -129,5 +134,5 @@
     }
   ],
   "status": "passed",
-  "screenshot_count": 25
+  "screenshot_count": 26
 }
