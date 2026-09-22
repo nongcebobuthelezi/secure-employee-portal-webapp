@@ -123,8 +123,19 @@ async def main():
         await expect(page.get_by_text("Complete", exact=True)).to_be_visible(timeout=15000)
 
         await page.goto(BASE_URL + "/requests", wait_until="domcontentloaded")
-        await page.get_by_label("Requested resource").fill("Finance reporting workspace")
-        await page.get_by_label("Business reason").fill(
+        await page.wait_for_timeout(900)
+        resource_input = page.get_by_label("Requested resource")
+        reason_input = page.get_by_label("Business reason")
+        await resource_input.fill("Finance reporting workspace")
+        await reason_input.fill(
+            "Required to prepare the monthly operational reporting pack for the finance team."
+        )
+        # Interactive Server hydration can replace prerendered form controls shortly
+        # after navigation. Verify the live values before submitting the real form.
+        if await resource_input.input_value() != "Finance reporting workspace":
+            await resource_input.fill("Finance reporting workspace")
+        await expect(resource_input).to_have_value("Finance reporting workspace")
+        await expect(reason_input).to_have_value(
             "Required to prepare the monthly operational reporting pack for the finance team."
         )
         await page.get_by_role("button", name="Submit request", exact=True).click()
