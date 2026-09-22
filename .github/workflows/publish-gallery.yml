@@ -1,0 +1,49 @@
+name: publish-runtime-gallery
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/publish-gallery.yml"
+
+permissions:
+  contents: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v6
+
+      - name: Download verified runtime evidence
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/runtime-gallery
+          curl -fsSL             -H "Authorization: Bearer $GH_TOKEN"             -H "Accept: application/vnd.github+json"             -H "X-GitHub-Api-Version: 2022-11-28"             "https://api.github.com/repos/nongcebobuthelezi/secure-employee-portal-webapp/actions/artifacts/10671438360/zip"             -o /tmp/runtime-gallery.zip
+          unzip -q /tmp/runtime-gallery.zip -d /tmp/runtime-gallery
+
+      - name: Publish verified screenshots
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p docs/images/runtime
+          cp /tmp/runtime-gallery/*.png docs/images/runtime/
+          cp /tmp/runtime-gallery/runtime-e2e-report.json docs/images/runtime/runtime-e2e-report.json
+
+      - name: Commit runtime gallery
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add docs/images/runtime
+          if git diff --cached --quiet; then
+            echo "Runtime gallery already published."
+            exit 0
+          fi
+          git commit -m "docs: publish verified runtime interface gallery"
+          git push
