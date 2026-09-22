@@ -47,6 +47,13 @@ This path demonstrates the project's engineering story without clicking through 
 
 ## Verification truth
 
-The current release-candidate source represents **74 expected automated test executions** plus the manual security/workflow checklist in `docs/testing.md`. Earlier Windows checkpoints established that the project can build, migrate and run on the intended stack, but the newest candidate must still pass the exact-package Release build, automated tests, EF model/migration check and manual browser workflow before it is described as runtime-verified.
+The portfolio build completed the exact release gate on **22 September 2026**:
 
-The final portfolio/GitHub release should be cut only from the exact source package that passes that gate.
+- warnings-as-errors Release build passed with 0 warnings and 0 errors;
+- **74 / 74 automated tests passed** with exact inventory enforcement;
+- EF Core reported no pending model changes;
+- the app started against an isolated SQL Server 2022 instance;
+- the Playwright browser journey passed across employee, authorization, administrator, manager and responsive flows;
+- **26 verified runtime screenshots** were captured with 0 document-level horizontal-overflow failures.
+
+See `docs/runtime-verification.md` and `docs/interface-gallery.md` for the evidence record.
