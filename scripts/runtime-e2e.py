@@ -16,6 +16,7 @@ OUT = Path(os.environ.get("E2E_OUTPUT_DIR", "artifacts/runtime-evidence"))
 OUT.mkdir(parents=True, exist_ok=True)
 
 checks = []
+# Complete runtime gallery verification.
 
 
 async def assert_page_healthy(page, label):
