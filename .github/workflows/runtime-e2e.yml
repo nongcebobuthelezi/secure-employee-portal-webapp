@@ -6,6 +6,13 @@ on:
     paths:
       - ".github/workflows/runtime-e2e.yml"
       - "scripts/runtime-e2e.py"
+      - "Components/**"
+      - "Data/**"
+      - "Models/**"
+      - "Services/**"
+      - "wwwroot/**"
+      - "Program.cs"
+      - "SecureEmployeePortal.csproj"
   workflow_dispatch:
 
 permissions:
