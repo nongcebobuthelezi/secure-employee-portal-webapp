@@ -123,6 +123,10 @@ async def main():
         await login(page, EMPLOYEE_EMAIL, EMPLOYEE_PASSWORD)
         await snap(page, "04-employee-dashboard-desktop.png", "Employee dashboard")
 
+        await page.goto(BASE_URL + "/dashboard?assistant=open", wait_until="domcontentloaded")
+        await expect(page.get_by_text("Secure Assistant", exact=True).first).to_be_visible(timeout=15000)
+        await snap(page, "26-secure-assistant-desktop.png", "Secure Assistant")
+
         await open_and_snap(page, "/profile", "05-employee-profile-desktop.png", "Employee profile")
         await expect(page.get_by_role("heading", name="My Profile")).to_be_visible(timeout=15000)
 
@@ -221,6 +225,8 @@ async def main():
         await expect(page.get_by_text("Confirm access decision")).to_be_visible(timeout=10000)
         await page.get_by_role("button", name="Confirm decision", exact=True).click()
         await expect(page.get_by_text("Approved", exact=True).first).to_be_visible(timeout=15000)
+        await page.get_by_label("Status").select_option("")
+        await expect(page.get_by_text("Finance reporting workspace", exact=True)).to_be_visible(timeout=15000)
         await snap(page, "17-access-review-approved-desktop.png", "Approved access request")
 
         await open_and_snap(page, "/admin/security-events", "18-security-events-desktop.png", "Security events")
