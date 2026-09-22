@@ -7,11 +7,13 @@
 @rendermode InteractiveServer
 @using Microsoft.AspNetCore.Authorization
 @using Microsoft.AspNetCore.Identity
+@using Microsoft.EntityFrameworkCore
+@using System.Security.Claims
 @using SecureEmployeePortal.Data
 @using SecureEmployeePortal.Services
 @attribute [Authorize]
 @inject AuthenticationStateProvider AuthenticationStateProvider
-@inject UserManager<ApplicationUser> UserManager
+@inject IDbContextFactory<ApplicationDbContext> DbFactory
 @inject AttendanceService AttendanceService
 @inject SecureAssistantService SecureAssistantService
 @inject NavigationManager NavigationManager
@@ -1005,17 +1007,29 @@ else
     protected override async Task OnInitializedAsync()
     {
         var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
-        CurrentUser = await UserManager.GetUserAsync(authState.User);
+        var userId = authState.User.FindFirstValue(ClaimTypes.NameIdentifier);
 
-        if (CurrentUser is not null)
+        if (!string.IsNullOrWhiteSpace(userId))
         {
-            DisplayFirstName = string.IsNullOrWhiteSpace(CurrentUser.FirstName) ? "Employee" : CurrentUser.FirstName;
-            CurrentRole = (await UserManager.GetRolesAsync(CurrentUser)).FirstOrDefault() ?? "Employee";
-            AttendanceSnapshot = await AttendanceService.GetSnapshotAsync(CurrentUser.Id, 30);
+            // Use a short-lived factory context rather than the scoped Identity context.
+            // The dashboard and authenticated layout can initialize concurrently during
+            // navigation, so sharing UserManager's DbContext here can trigger EF Core's
+            // "second operation" concurrency guard.
+            await using var db = await DbFactory.CreateDbContextAsync();
+            CurrentUser = await db.Users
+                .AsNoTracking()
+                .SingleOrDefaultAsync(user => user.Id == userId);
+
+            if (CurrentUser is not null)
+            {
+                DisplayFirstName = string.IsNullOrWhiteSpace(CurrentUser.FirstName) ? "Employee" : CurrentUser.FirstName;
+                CurrentRole = authState.User.Claims
+                    .FirstOrDefault(claim => claim.Type == ClaimTypes.Role)?.Value ?? "Employee";
+                AttendanceSnapshot = await AttendanceService.GetSnapshotAsync(CurrentUser.Id, 30);
+            }
         }
 
         EnsureAssistantWelcomeMessage();
-
     }
 
     protected override void OnParametersSet()
