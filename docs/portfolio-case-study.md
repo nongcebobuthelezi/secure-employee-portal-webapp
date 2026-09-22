@@ -120,7 +120,7 @@ Development password-reset messages are written only to an ignored local directo
 
 ## Testing and release protection
 
-The current source represents **74 expected automated test executions**. The suite covers business rules, input validation, role/account boundaries, malformed return URLs, transactional workflow guards, privacy boundaries and source-level regression protections.
+The verified release contains **74 automated test executions**, and the final GitHub CI run passed **74 / 74** with exact inventory enforcement. The suite covers business rules, input validation, role/account boundaries, malformed return URLs, transactional workflow guards, privacy boundaries and source-level regression protections.
 
 The release gate is designed to fail if the discovered test inventory is anything other than 74, preventing deleted or accidentally disabled tests from making CI appear green with a silently smaller suite.
 
@@ -135,13 +135,13 @@ Additional source-level protections cover areas that are easy to regress in Blaz
 - mobile action-link containment;
 - Entity Framework workflow/migration coverage.
 
-The release candidate is deliberately described as **source complete / pre-runtime verified** until the exact package is built and the full automated + manual runtime gate is reproduced on that same source.
+The release is **runtime verified as a portfolio build**. The exact application source passed the warnings-as-errors Release build, 74/74 automated tests, EF model/migration alignment and a SQL-backed Playwright browser journey. The final browser pass generated 26 verified interface screenshots with zero document-level horizontal-overflow failures.
 
 ## UI and responsive design
 
 The interface uses a restrained MyNIF-inspired business visual system: navy navigation, light neutral surfaces, white content cards and turquoise/blue accents.
 
-The approved authentication composition is protected from short-viewport regression. Authenticated screens have also been statically exercised across phone, tablet and desktop viewport widths, including privileged administration pages.
+The approved authentication composition is protected from short-viewport regression. The final runtime gate also exercised desktop and 390 × 844 mobile views against the running SQL-backed application, with zero document-level horizontal-overflow failures across all captured routes.
 
 The visual design supports the security story rather than replacing it: the same account identity, role and account-state model drives what the user can actually access.
 
@@ -181,4 +181,4 @@ A short review of the project can demonstrate:
 
 The project does not claim MFA, external identity federation, penetration-test certification, enterprise compliance certification, production SMTP infrastructure or a currently verified public production deployment.
 
-Those are not hidden gaps. They are explicit scope boundaries. The release should only make stronger runtime/deployment claims after the exact release-candidate package passes the documented build, test, EF and browser workflow gate.
+Those are not hidden gaps. They are explicit scope boundaries. Runtime verification has been completed for the portfolio build; public production deployment and production-security certification remain outside the claims of this project.
