@@ -1,80 +1,116 @@
-<!-- Secure Employee Portal portfolio README -->
-
 # Secure Employee Portal
 
-A security-focused employee identity and access-management portal built with **C#**, **.NET 10**, **Blazor**, **ASP.NET Core Identity**, **Entity Framework Core**, and **SQL Server**.
+A security-focused employee identity and access-management web application built with **C#**, **.NET 10**, **Blazor**, **ASP.NET Core Identity**, **Entity Framework Core** and **SQL Server**.
 
-![Blazor](https://img.shields.io/badge/Blazor-512BD4?logo=blazor&logoColor=white)
-![C%23](https://img.shields.io/badge/C%23-239120?logo=csharp&logoColor=white)
-![.NET](https://img.shields.io/badge/.NET_10-512BD4?logo=dotnet&logoColor=white)
-![ASP.NET Core](https://img.shields.io/badge/ASP.NET_Core-512BD4?logo=dotnet&logoColor=white)
-![EF Core](https://img.shields.io/badge/Entity_Framework_Core-512BD4)
-![Status](https://img.shields.io/badge/Status-Portfolio_Candidate-2F855A)
+![CI](https://github.com/nongcebobuthelezi/secure-employee-portal-webapp/actions/workflows/ci.yml/badge.svg)
+![Runtime E2E](https://github.com/nongcebobuthelezi/secure-employee-portal-webapp/actions/workflows/runtime-e2e.yml/badge.svg)
+![.NET 10](https://img.shields.io/badge/.NET-10-512BD4?logo=dotnet&logoColor=white)
+![C#](https://img.shields.io/badge/C%23-14-239120?logo=csharp&logoColor=white)
+![Blazor](https://img.shields.io/badge/Blazor-Web_App-512BD4?logo=blazor&logoColor=white)
+![SQL Server](https://img.shields.io/badge/SQL_Server-2022-CC2927?logo=microsoftsqlserver&logoColor=white)
+![Status](https://img.shields.io/badge/Status-Runtime_Verified-2F855A)
 
+<table>
+<tr>
+<td width="50%"><img src="docs/images/runtime/04-employee-dashboard-desktop.png" alt="Employee dashboard"></td>
+<td width="50%"><img src="docs/images/runtime/12-admin-dashboard-desktop.png" alt="Security administration dashboard"></td>
+</tr>
+<tr>
+<td align="center"><strong>Employee self-service</strong></td>
+<td align="center"><strong>Protected security administration</strong></td>
+</tr>
+</table>
 
-## Why This Project Exists
+## What this project demonstrates
 
-Secure Employee Portal represents protected internal software for a fictional organisation. It is deliberately **not** a complete HR platform. The project is centred on a smaller, more technically coherent question:
+Secure Employee Portal is a focused internal business application for employee identity, account access and auditable administration. It deliberately avoids becoming a full HR platform and instead centres the engineering story on one question:
 
 > Who is the user, have they proved their identity, and what are they allowed to access or change?
 
-The result combines an employee self-service experience with a protected security-administration console while preserving the original MyNIF-inspired visual direction.
+The application combines real authentication, role-based authorization, account-state controls, employee self-service, persisted business workflows and protected administrator actions in one coherent .NET system.
 
-## Portfolio Features
+## Verified release status
+
+The current application was verified on **22 September 2026** using GitHub Actions, .NET 10, an isolated SQL Server 2022 instance and Playwright Chromium.
+
+| Gate | Result |
+| --- | --- |
+| Release build | **Passed** |
+| Compiler/analyzer warnings | **0** |
+| Build errors | **0** |
+| Automated tests | **74 passed / 0 failed / 0 skipped** |
+| Enforced test inventory | **74 / 74** |
+| EF Core pending model changes | **None** |
+| SQL-backed browser journey | **Passed** |
+| Runtime screenshots | **26** |
+| Captured-route horizontal overflow | **0 failures** |
+
+See [Runtime Verification](docs/runtime-verification.md) for the exact gate and [Complete Interface Gallery](docs/interface-gallery.md) for the full application screenshot set.
+
+## Interface highlights
+
+<table>
+<tr>
+<td width="50%"><img src="docs/images/runtime/01-login-desktop.png" alt="Secure sign-in"></td>
+<td width="50%"><img src="docs/images/runtime/26-secure-assistant-desktop.png" alt="Secure Assistant"></td>
+</tr>
+<tr>
+<td align="center">Secure authentication</td>
+<td align="center">Built-in Secure Assistant</td>
+</tr>
+<tr>
+<td><img src="docs/images/runtime/07-attendance-clocked-in-desktop.png" alt="Attendance workflow"></td>
+<td><img src="docs/images/runtime/17-access-review-approved-desktop.png" alt="Administrator access review"></td>
+</tr>
+<tr>
+<td align="center">Persisted attendance</td>
+<td align="center">Auditable access review</td>
+</tr>
+</table>
+
+The repository contains **all 26 verified runtime screenshots**, including authentication, employee, manager, administrator and mobile views.
+
+## Core functionality
 
 ### Identity and account security
 
-- database-backed ASP.NET Core Identity users and roles;
+- ASP.NET Core Identity-backed users, roles, password hashing and lockout;
 - employee registration with validation and duplicate-account prevention;
-- Identity-managed password hashing;
-- secure login, logout and authenticated sessions;
-- failed-login lockout support;
+- secure login, POST/antiforgery logout and authenticated sessions;
 - neutral login and forgot-password responses;
 - token-backed password reset;
-- account-status checks for Active, Suspended and Disabled accounts;
-- protected Blazor routes and periodic session revalidation;
+- Active, Suspended and Disabled account states;
+- periodic session revalidation;
+- fresh database-backed authorization checks on sensitive writes;
 - safe access-denied and production-error experiences.
 
 ### Employee self-service
 
-- authenticated MyNIF-inspired dashboard with real employee identity;
-- database-backed profile information and permitted profile editing;
-- password change and personal security history;
-- clock in / clock out;
-- persisted attendance history and weekly summary;
-- narrow protected-resource access-request workflow;
-- employee-safe account activity timeline;
-- functioning in-dashboard Secure Assistant for account, security, attendance, profile and access-request guidance, launchable from the dashboard or top-bar help control;
-- concise Help & Support area.
+- authenticated employee dashboard;
+- database-backed profile and permitted profile editing;
+- password change and personal security activity;
+- clock in / clock out with persisted attendance history;
+- weekly attendance summary;
+- protected-resource access requests;
+- personal account activity timeline;
+- Help & Support;
+- a deterministic C# Secure Assistant with bounded portal guidance and real deep links.
 
 ### Roles and administration
 
-- fixed `Employee`, `Manager` and `Administrator` roles;
+- fixed Employee, Manager and Administrator roles;
 - limited Manager team view;
-- administrator overview with account/security metrics;
+- security-administration dashboard;
 - user search and filtering;
 - administrator-created employee accounts;
 - account activation/restoration, suspension and disabling;
 - role assignment and role changes;
 - administrator self-lockout protection;
 - access-request approval/rejection with confirmation;
-- system security-event console;
-- administrator audit-log console.
+- security-event console;
+- audit-log console.
 
-### Engineering quality
-
-- Entity Framework Core migrations;
-- short-lived database contexts through `IDbContextFactory`;
-- explicit business-rule classes for account access, attendance and access requests;
-- deterministic, testable C# support-assistant service with portal deep links and no external AI dependency;
-- security and audit records for important workflows;
-- loading, empty, success, validation and error states;
-- automated MSTest business-rule, validation and source-regression tests;
-- GitHub Actions CI for Release build and tests;
-- deployment-aware configuration, health endpoint and documented Azure/SQL strategy;
-- architecture, security, role-permission, testing and deployment documentation.
-
-## Role Model
+## Role model
 
 | Capability | Employee | Manager | Administrator |
 | --- | :---: | :---: | :---: |
@@ -86,126 +122,123 @@ The result combines an employee self-service experience with a protected securit
 | Access-request review | — | — | ✓ |
 | System security events / audit logs | — | — | ✓ |
 
-See [`docs/role-permissions.md`](docs/role-permissions.md) for the full matrix.
+See [Role Permissions](docs/role-permissions.md) for the full matrix.
 
-## Security Decisions
+## Security decisions
 
-- Passwords are created and verified by ASP.NET Core Identity; the application does not implement custom password hashing.
-- Public registration receives the least-privileged `Employee` role.
-- Authorization is enforced by ASP.NET Core rather than relying on hidden navigation controls.
-- Suspended and disabled accounts are rejected at sign-in and revalidated during long-lived Blazor sessions.
-- Logout is a POST operation protected by an antiforgery token.
-- Reset tokens are not written to application logs.
-- High-impact administrator actions create audit records.
+- Password handling is delegated to ASP.NET Core Identity rather than custom cryptography.
+- Public registration receives the least-privileged Employee role.
+- Authorization is enforced on the server; hidden navigation is never treated as the security boundary.
+- Account state is separate from role, so a valid password does not override suspension or disablement.
+- Sensitive writes re-check the active user/administrator state against the database.
+- Protected role/status changes invalidate the target user's security stamp.
+- Logout uses POST plus antiforgery protection.
+- Reset tokens and passwords are excluded from audit/security records.
 - Production cookies require HTTPS.
-- Production rejects the repository's LocalDB development connection string, forcing an explicit hosted SQL configuration.
-- HSTS and defensive response headers are enabled for hosted environments.
+- HSTS and defensive response headers are enabled outside Development.
+- Production rejects the repository's LocalDB development connection string.
 
-See [`docs/security.md`](docs/security.md) for the rationale and deliberate limitations.
+See [Security Decisions](docs/security.md) for the complete rationale and deliberate limitations.
 
-## Technology Stack
+## Architecture
+
+```text
+Browser
+  ↓
+Blazor Web App / Razor components
+  ↓
+ASP.NET Core authentication + authorization
+  ↓
+Application services + explicit business rules
+  ↓
+ASP.NET Core Identity + Entity Framework Core
+  ↓
+SQL Server / Azure SQL
+```
+
+The application uses static/server-rendered identity forms where cookie-writing flows require normal HTTP responses, and Interactive Server components for stateful workflows such as attendance, filters, access review and the Secure Assistant.
+
+## Technology stack
 
 - C# 14
 - .NET 10 / ASP.NET Core
-- Blazor Web App and Razor components
+- Blazor Web App / Razor components
 - ASP.NET Core Identity
 - Entity Framework Core 10
-- SQL Server / SQL Server LocalDB for Windows development
+- SQL Server / SQL Server LocalDB
 - MSTest
+- Playwright
 - CSS
 - GitHub Actions
 
-The repository currently targets .NET SDK `10.0.301` and the `10.0.10` ASP.NET Core Identity / Entity Framework Core patch line.
+The repository targets .NET SDK **10.0.301** and the **10.0.10** ASP.NET Core Identity / Entity Framework Core patch line.
 
-## Local Development
+## Testing and CI
+
+Two complementary GitHub Actions workflows protect the project:
+
+- **CI** — warnings-as-errors Release build, exact automated-test inventory, 74/74 tests and EF Core model/migration alignment.
+- **Runtime E2E** — clean SQL Server, real application startup, health check, Playwright browser workflows, authorization boundaries, persistence and responsive screenshot verification.
+
+Run the local verification gate with:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\scripts\verify-portfolio.ps1
+```
+
+See [Testing and Verification](docs/testing.md) for the wider manual security/workflow checklist.
+
+## Local development
 
 ### Prerequisites
 
-- .NET SDK `10.0.301` or a compatible .NET 10 SDK
+- .NET SDK 10.0.301 or a compatible .NET 10 SDK
 - SQL Server LocalDB on Windows for the included development connection string
 
 ### Restore and run
 
 ```powershell
-# Restore the repository's local EF Core tool.
 dotnet tool restore
-
-# Restore and build the application.
 dotnet restore
 dotnet build
-
-# Run the portal.
 dotnet run
 ```
 
 Development applies EF Core migrations automatically so the local schema can be reproduced from source.
 
-## Development Administrator
+### Development administrator
 
 Administrator credentials are intentionally not committed. Configure a local administrator with .NET user secrets:
 
 ```powershell
-# Configure a local-only administrator identity.
 dotnet user-secrets set "SeedAdmin:Email" "admin@secureportal.local"
 dotnet user-secrets set "SeedAdmin:Password" "YOUR-STRONG-LOCAL-PASSWORD"
 ```
 
-On application start, the seed service ensures the fixed roles exist and creates/promotes the configured administrator account.
+## Deployment readiness
 
-## Password Reset in Development
+The project is prepared for an ASP.NET Core host such as Azure App Service plus a SQL Server-compatible hosted database such as Azure SQL. Hosted credentials, SMTP settings and connection strings are external configuration and are never committed to the repository.
 
-When SMTP is not configured in Development, reset messages are written to:
+See [Deployment Readiness](docs/deployment.md) for the migration strategy, required environment variables and health-check process.
 
-`App_Data/development-mail/`
+## Documentation
 
-The directory is ignored by Git because each message contains a temporary reset link. Hosted environments require SMTP configuration through secure environment-specific settings.
+- [Complete Interface Gallery](docs/interface-gallery.md)
+- [Runtime Verification Record](docs/runtime-verification.md)
+- [Architecture](docs/architecture.md)
+- [Security Decisions](docs/security.md)
+- [Role Permissions](docs/role-permissions.md)
+- [Testing and Verification](docs/testing.md)
+- [Deployment Readiness](docs/deployment.md)
+- [Portfolio Case Study](docs/portfolio-case-study.md)
+- [Recruiter Demo Script](docs/demo-script.md)
+- [Portfolio Handoff](docs/portfolio-handoff.md)
+- [Release Checklist](docs/release-checklist.md)
 
-## Testing
+## Scope boundary
 
-Run the final automated verification gate:
+The project deliberately excludes payroll, tax calculations, recruitment, performance management, full benefits administration, complex shift scheduling, biometric/location tracking and a custom enterprise permission builder.
 
-```powershell
-# Restore, Release-build, test and check EF Core model/migration alignment.
-# The process-scoped bypass avoids changing the machine-wide PowerShell policy.
-powershell -ExecutionPolicy Bypass -File .\scripts\verify-portfolio.ps1
-```
+It also does not claim MFA, external identity federation, penetration-test certification, enterprise compliance certification or a public production deployment.
 
-The manual end-to-end security/workflow checklist is in [`docs/testing.md`](docs/testing.md).
-
-## Continuous Integration
-
-`.github/workflows/ci.yml` restores the pinned EF Core tool, runs a warnings-as-errors Release build, executes the automated test project, and verifies that the EF Core model still matches the committed migrations for pushes and pull requests to `main`.
-
-## Deployment
-
-The application is prepared for an ASP.NET Core host such as Azure App Service plus a SQL Server-compatible hosted database such as Azure SQL. Production secrets and connection strings are external configuration, never repository values.
-
-See [`docs/deployment.md`](docs/deployment.md) for the deployment gate, required environment variables, migration strategy and `/health` check.
-
-## Architecture and Documentation
-
-- [`docs/architecture.md`](docs/architecture.md)
-- [`docs/security.md`](docs/security.md)
-- [`docs/role-permissions.md`](docs/role-permissions.md)
-- [`docs/testing.md`](docs/testing.md)
-- [`docs/deployment.md`](docs/deployment.md)
-- [`docs/release-checklist.md`](docs/release-checklist.md)
-- [`docs/portfolio-handoff.md`](docs/portfolio-handoff.md)
-- [`docs/portfolio-case-study.md`](docs/portfolio-case-study.md)
-- [`docs/demo-script.md`](docs/demo-script.md)
-
-## Current Interface
-
-The final interface keeps the MyNIF-inspired navy, white and turquoise visual system while focusing the product on authenticated identity, account security, attendance, access requests and security administration. Stale pre-functionality screenshots are intentionally excluded from this release so the repository does not present UI that no longer matches the running application.
-
-## Scope Boundary
-
-The project deliberately excludes payroll, tax calculations, recruitment, performance management, complete benefits administration, complex shift scheduling, geographic/biometric tracking and a custom enterprise permission builder. That keeps the portfolio story centred on **identity, account access, authorization and auditable business workflows**.
-
-## Verification Status
-
-Two earlier Windows gates established the runtime baseline: the first verified package passed 14/14 tests, and the subsequent polished package passed 31/31 tests, matched the EF Core migration model, applied successfully to SQL Server LocalDB, and started locally. Manual testing then exposed a static-SSR login form-binding defect, which was repaired before this release.
-
-The current release candidate contains **74 expected automated test executions** covering business rules, validation, authorization boundaries, malformed return URLs, transactional workflow guards, privacy boundaries, role-state recovery, credential/logging protections, internal navigation and the frozen authentication layout. The local verification script and CI both assert that exactly 74 executions are discovered, so deleting or accidentally disabling tests cannot silently reduce the release gate. This count describes the suite represented in source; it is not a claim that the newest candidate has already passed 74 runtime tests.
-
-Run `scripts/verify-portfolio.ps1` and the manual workflow checklist in [`docs/testing.md`](docs/testing.md) on this exact package before deployment. Until that exact-package gate passes, the repository remains a **portfolio candidate** rather than claiming unverified production readiness.
+Those are deliberate boundaries. The implemented scope is designed to demonstrate **identity, authorization, account security, persisted workflows and auditable administration deeply rather than superficially implementing an entire HR suite**.
