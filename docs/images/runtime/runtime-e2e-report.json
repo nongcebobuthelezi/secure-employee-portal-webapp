@@ -1,0 +1,133 @@
+{
+  "base_url": "http://127.0.0.1:5080",
+  "employee": "nandi.employee@secureportal.test",
+  "checks": [
+    {
+      "page": "Login",
+      "url": "http://127.0.0.1:5080/",
+      "horizontal_overflow_px": 0
+    },
+    {
+      "page": "Register",
+      "url": "http://127.0.0.1:5080/register",
+      "horizontal_overflow_px": 0
+    },
+    {
+      "page": "Forgot password",
+      "url": "http://127.0.0.1:5080/forgot-password",
+      "horizontal_overflow_px": 0
+    },
+    {
+      "page": "Employee dashboard",
+      "url": "http://127.0.0.1:5080/dashboard",
+      "horizontal_overflow_px": 0
+    },
+    {
+      "page": "Employee profile",
+      "url": "http://127.0.0.1:5080/profile",
+      "horizontal_overflow_px": 0
+    },
+    {
+      "page": "Employee security",
+      "url": "http://127.0.0.1:5080/security",
+      "horizontal_overflow_px": 0
+    },
+    {
+      "page": "Attendance clocked in",
+      "url": "http://127.0.0.1:5080/attendance",
+      "horizontal_overflow_px": 0
+    },
+    {
+      "page": "Employee access request",
+      "url": "http://127.0.0.1:5080/requests",
+      "horizontal_overflow_px": 0
+    },
+    {
+      "page": "Account activity",
+      "url": "http://127.0.0.1:5080/account-activity",
+      "horizontal_overflow_px": 0
+    },
+    {
+      "page": "Help and support",
+      "url": "http://127.0.0.1:5080/support",
+      "horizontal_overflow_px": 0
+    },
+    {
+      "page": "Access denied",
+      "url": "http://127.0.0.1:5080/access-denied?ReturnUrl=%2Fadmin",
+      "horizontal_overflow_px": 0
+    },
+    {
+      "page": "Administrator dashboard",
+      "url": "http://127.0.0.1:5080/admin",
+      "horizontal_overflow_px": 0
+    },
+    {
+      "page": "User management",
+      "url": "http://127.0.0.1:5080/admin/users",
+      "horizontal_overflow_px": 0
+    },
+    {
+      "page": "Create employee account",
+      "url": "http://127.0.0.1:5080/admin/users/create",
+      "horizontal_overflow_px": 0
+    },
+    {
+      "page": "Employee account administration",
+      "url": "http://127.0.0.1:5080/admin/users/561c0701-b650-4a93-9ada-4fd8653fd5bf",
+      "horizontal_overflow_px": 0
+    },
+    {
+      "page": "Roles and permissions",
+      "url": "http://127.0.0.1:5080/admin/roles",
+      "horizontal_overflow_px": 0
+    },
+    {
+      "page": "Approved access request",
+      "url": "http://127.0.0.1:5080/admin/access-requests",
+      "horizontal_overflow_px": 0
+    },
+    {
+      "page": "Security events",
+      "url": "http://127.0.0.1:5080/admin/security-events",
+      "horizontal_overflow_px": 0
+    },
+    {
+      "page": "Audit logs",
+      "url": "http://127.0.0.1:5080/admin/audit-logs",
+      "horizontal_overflow_px": 0
+    },
+    {
+      "page": "Manager team view",
+      "url": "http://127.0.0.1:5080/manager",
+      "horizontal_overflow_px": 0
+    },
+    {
+      "page": "Login mobile",
+      "url": "http://127.0.0.1:5080/",
+      "horizontal_overflow_px": 0
+    },
+    {
+      "page": "Employee dashboard mobile",
+      "url": "http://127.0.0.1:5080/dashboard",
+      "horizontal_overflow_px": 0
+    },
+    {
+      "page": "Employee profile mobile",
+      "url": "http://127.0.0.1:5080/profile",
+      "horizontal_overflow_px": 0
+    },
+    {
+      "page": "Attendance mobile",
+      "url": "http://127.0.0.1:5080/attendance",
+      "horizontal_overflow_px": 0
+    },
+    {
+      "page": "Administrator dashboard mobile",
+      "url": "http://127.0.0.1:5080/admin",
+      "horizontal_overflow_px": 0
+    }
+  ],
+  "status": "passed",
+  "screenshot_count": 25
+}
