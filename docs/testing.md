@@ -20,7 +20,7 @@ It covers representative business rules and validation, including:
 - source-level regression guards for the frozen authentication layout, static-SSR form wiring, protected dashboard routing and fresh database-backed authorization checks on sensitive writes;
 - negative-regression guards for employee/manager/admin route boundaries, neutral authentication responses, transactional attendance/access-request state changes, admin self-protection, unknown/multiple-role recovery, blank source-controlled credentials, secret-free activity logging, personal account-activity isolation, profile-save rollback consistency, development reset-token containment, literal internal-link routing, mobile full-width action-link containment, and required EF workflow entities.
 
-Expected automated test executions in the current release candidate: **74**. The verification gate also treats compiler/analyzer warnings as errors.
+Automated test executions in the verified release: **74**. The final GitHub CI run passed **74 / 74** with 0 failures and 0 skipped tests. The verification gate also treats compiler/analyzer warnings as errors.
 
 Run the complete automated verification gate from PowerShell:
 
@@ -102,6 +102,23 @@ After the script passes, run the app with `dotnet run` and verify these end-to-e
 
 ## Verification status
 
-A Windows development verification of the first polished package completed successfully: the Release build passed, 31/31 automated tests passed, the EF Core model matched the latest migration, and the application started successfully. Manual sign-in testing then exposed a static-SSR form-binding defect that automated tests did not catch; that defect was repaired before this package.
+The exact portfolio application completed the release gate on **22 September 2026**.
 
-The current release-candidate source additionally protects the approved short-viewport authentication composition, static-SSR login/registration form wiring, fresh authorization checks on sensitive writes, personal account-activity isolation, failed-profile-update rollback, known-role recovery, reset-token containment, internal route/link integrity and mobile action-link containment. The current source represents **74 expected automated test executions**. The verification script and CI both fail if the discovered execution count is anything other than 74, preventing a silently reduced test suite from passing the release gate. Run the verification script above and complete the manual workflow checklist once more on this exact package before deployment. The project should only be labelled runtime-verified after that final package gate passes.
+Final verified results:
+
+- warnings-as-errors Release build: **passed**;
+- compiler/analyzer warnings: **0**;
+- build errors: **0**;
+- automated tests: **74 passed / 0 failed / 0 skipped**;
+- enforced test inventory: **74 / 74**;
+- EF Core pending model changes: **none**;
+- SQL Server-backed application startup: **passed**;
+- Playwright end-to-end browser journey: **passed**;
+- verified runtime screenshots: **26**;
+- document-level horizontal overflow across captured routes: **0 failures**.
+
+The browser gate covered registration, login, employee self-service, attendance, access requests, authorization denial, administrator account management, roles, request review, security events, audit logs, manager scope and responsive mobile views.
+
+The expanded browser run also exposed and helped repair two runtime issues before release: shared EF Core context contention during concurrent layout/page initialization and a malformed forgot-password privacy notice layout.
+
+See [Runtime Verification](runtime-verification.md) and [Complete Interface Gallery](interface-gallery.md) for the final evidence.
