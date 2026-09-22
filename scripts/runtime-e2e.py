@@ -37,6 +37,30 @@ async def assert_page_healthy(page, label):
         "() => Math.max(document.documentElement.scrollWidth, document.body.scrollWidth) - window.innerWidth"
     )
     if overflow > 2:
+        offenders = await page.evaluate("""() => Array.from(document.querySelectorAll('*'))
+            .map(el => {
+                const r = el.getBoundingClientRect();
+                const s = getComputedStyle(el);
+                return {
+                    tag: el.tagName,
+                    cls: el.className && String(el.className).slice(0, 140),
+                    left: Math.round(r.left),
+                    right: Math.round(r.right),
+                    width: Math.round(r.width),
+                    position: s.position,
+                    display: s.display,
+                    transform: s.transform
+                };
+            })
+            .filter(x => x.right > window.innerWidth + 2 || x.left < -2)
+            .slice(0, 40)""")
+        print("OVERFLOW_DIAGNOSTIC", json.dumps({
+            "label": label,
+            "viewport": await page.evaluate("() => ({w: innerWidth, h: innerHeight})"),
+            "scroll_width": await page.evaluate("() => document.documentElement.scrollWidth"),
+            "offenders": offenders
+        }))
+        await page.screenshot(path=str(OUT / "mobile-overflow-diagnostic.png"), full_page=False)
         raise AssertionError(f"{label}: document-level horizontal overflow: {overflow}px")
 
     checks.append({"page": label, "url": page.url, "horizontal_overflow_px": overflow})
